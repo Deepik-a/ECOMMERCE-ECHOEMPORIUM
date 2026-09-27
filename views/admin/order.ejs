@@ -1,84 +1,373 @@
+﻿<%- include('sidebar') %>
 
-
-
-
-<%- include('sidebar') %>
-
-<!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-<!-- DataTables JS and Bootstrap integration -->
-<script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-
-<!-- DataTables CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css">
-
-<!-- Custom CSS for table styling -->
 <style>
-    .table {
-        background-color: #f8f9fa; /* Light background for better contrast */
+    :root {
+        --primary-navy: #0f172a;
+        --primary-accent: #2563eb;
+        --surface-bg: #f8fafc;
+        --card-bg: #ffffff;
+        --border-color: #e2e8f0;
+        --text-dark: #1e293b;
+        --text-muted: #64748b;
     }
-    .table th {
-        background-color: #007bff; /* Blue header background */
-        color: white; /* White text color for header */
+    body { background-color: var(--surface-bg); color: var(--text-dark); min-height: 100vh; }
+    .orders-wrapper { padding: 2rem 2.5rem 3rem; }
+    .page-header-card {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        border-radius: 1rem; padding: 1.5rem 2rem; color: #fff;
+        box-shadow: 0 10px 25px -5px rgba(15,23,42,0.18); margin-bottom: 1.75rem;
     }
-    .table td {
-        vertical-align: middle; /* Center align the content */
+    .status-tabs { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .status-tab {
+        display: inline-flex; align-items: center; gap: 0.4rem;
+        padding: 0.45rem 1rem; border-radius: 9999px; font-size: 0.8125rem;
+        font-weight: 600; border: 1.5px solid var(--border-color);
+        background: #fff; color: var(--text-muted);
+        text-decoration: none !important; transition: all 0.18s ease; cursor: pointer;
     }
-    .action-buttons {
-        display: flex;
-        flex-direction: row;
-        gap: 5px; /* Space between buttons */
+    .status-tab:hover { border-color: #94a3b8; color: var(--text-dark); text-decoration: none !important; }
+    .status-tab.active {
+        background: var(--primary-accent); border-color: var(--primary-accent);
+        color: #fff; box-shadow: 0 2px 8px rgba(37,99,235,0.25);
     }
-    .action-buttons button {
-        width: 100px /* Make buttons full width */
+    .status-tab .tab-count {
+        background: rgba(255,255,255,0.22); border-radius: 9999px;
+        padding: 0.05rem 0.45rem; font-size: 0.7rem;
     }
+    .status-tab:not(.active) .tab-count { background: #f1f5f9; color: #475569; }
+    .filter-card {
+        background: #fff; border-radius: 0.875rem; border: 1px solid var(--border-color);
+        padding: 1rem 1.25rem; margin-bottom: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .data-card {
+        background: var(--card-bg); border-radius: 1rem; border: 1px solid var(--border-color);
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden;
+    }
+    .orders-table { width: 100%; margin-bottom: 0; }
+    .orders-table thead th {
+        background: #f1f5f9; color: #475569; font-size: 0.72rem;
+        font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+        padding: 0.9rem 1.1rem; border-bottom: 1px solid var(--border-color); white-space: nowrap;
+    }
+    .orders-table tbody td {
+        padding: 1rem 1.1rem; vertical-align: middle; color: #334155;
+        font-size: 0.865rem; border-bottom: 1px solid #f1f5f9; background: #fff;
+    }
+    .orders-table tbody tr:last-child td { border-bottom: none; }
+    .orders-table tbody tr:hover td { background: #f8fafc; }
+    .order-id-badge {
+        font-family: 'SFMono-Regular', Consolas, monospace; font-size: 0.78rem;
+        font-weight: 700; color: #1d4ed8; background: #eff6ff;
+        border: 1px solid #bfdbfe; border-radius: 0.4rem; padding: 0.25rem 0.55rem; white-space: nowrap;
+    }
+    .status-badge {
+        display: inline-flex; align-items: center; gap: 0.3rem;
+        padding: 0.3rem 0.7rem; border-radius: 9999px; font-size: 0.73rem;
+        font-weight: 600; white-space: nowrap;
+    }
+    .status-badge::before {
+        content: ''; width: 6px; height: 6px; border-radius: 50%;
+        display: inline-block; flex-shrink: 0;
+    }
+    .badge-pending    { background: #fefce8; color: #a16207; border: 1px solid #fef08a; }
+    .badge-pending::before { background: #ca8a04; }
+    .badge-confirmed  { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .badge-confirmed::before { background: #2563eb; }
+    .badge-shipped    { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+    .badge-shipped::before { background: #16a34a; }
+    .badge-delivered  { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+    .badge-delivered::before { background: #059669; }
+    .badge-cancelled  { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .badge-cancelled::before { background: #dc2626; }
+    .badge-returned   { background: #fdf4ff; color: #a21caf; border: 1px solid #f5d0fe; }
+    .badge-returned::before { background: #c026d3; }
+    .badge-paid       { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    .badge-paid::before { background: #15803d; }
+    .payment-badge {
+        font-size: 0.75rem; font-weight: 600; padding: 0.25rem 0.55rem;
+        border-radius: 0.375rem; background: #f8fafc;
+        border: 1px solid #e2e8f0; color: #475569; white-space: nowrap;
+    }
+    .action-btn {
+        width: 32px; height: 32px; display: inline-flex; align-items: center;
+        justify-content: center; border-radius: 0.45rem; border: none;
+        background: #f1f5f9; color: #475569; text-decoration: none !important;
+        transition: all 0.18s ease;
+    }
+    .action-btn:hover {
+        background: #dbeafe; color: #1d4ed8;
+        transform: translateY(-1px); text-decoration: none !important;
+    }
+    .user-info-block .user-name { font-weight: 600; color: #1e293b; font-size: 0.875rem; }
+    .user-info-block .user-email { font-size: 0.73rem; color: #64748b; }
+    .items-count { font-size: 0.8rem; color: #475569; }
+    .items-count strong { color: #1e293b; }
+    .pagination-wrap {
+        padding: 1rem 1.25rem; border-top: 1px solid #f1f5f9;
+        display: flex; justify-content: space-between; align-items: center;
+        flex-wrap: wrap; gap: 0.75rem;
+    }
+    .custom-pagination .page-link {
+        border-radius: 0.4rem; margin: 0 2px; border: 1px solid var(--border-color);
+        color: #334155; font-weight: 600; padding: 0.4rem 0.8rem;
+        font-size: 0.85rem; transition: all 0.18s;
+    }
+    .custom-pagination .page-item.active .page-link {
+        background: var(--primary-accent); border-color: var(--primary-accent); color: #fff;
+    }
+    .empty-state { text-align: center; padding: 4rem 2rem; color: #94a3b8; }
+    .empty-state i { font-size: 3.5rem; margin-bottom: 1rem; opacity: 0.4; }
+    .stat-chips { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.5rem; }
+    .stat-chip {
+        display: inline-flex; align-items: center; gap: 0.5rem;
+        background: #fff; border: 1px solid var(--border-color);
+        border-radius: 0.75rem; padding: 0.65rem 1.1rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .stat-chip .chip-icon {
+        width: 34px; height: 34px; border-radius: 0.5rem;
+        display: flex; align-items: center; justify-content: center; font-size: 0.95rem;
+    }
+    .stat-chip .chip-label { font-size: 0.7rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .stat-chip .chip-val { font-size: 1.1rem; font-weight: 700; color: #1e293b; line-height: 1; }
+    .price-text { font-weight: 700; color: #1e293b; font-size: 0.9rem; }
+    .price-text .currency { color: #64748b; font-size: 0.75rem; font-weight: 500; }
 </style>
 
-<div class="row header" style="text-align:center;color:green">
-    <h3>Order Management</h3>
+<div class="orders-wrapper">
+
+    <!-- Page Header -->
+    <div class="page-header-card d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+            <h3 class="fw-bold mb-1">
+                <i class="fa fa-shopping-cart me-2 text-primary"></i>Order Management
+            </h3>
+            <p class="text-white-50 small mb-0">View, track and update all customer orders in real-time.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge text-white px-3 py-2 rounded-pill fw-semibold" style="background:rgba(255,255,255,0.15);">
+                <i class="fa fa-boxes me-1"></i><%= totalOrders %> Total Orders
+            </span>
+        </div>
+    </div>
+
+    <!-- Summary Stat Chips -->
+    <div class="stat-chips">
+        <div class="stat-chip">
+            <div class="chip-icon" style="background:#fefce8; color:#a16207;"><i class="fa fa-clock"></i></div>
+            <div>
+                <div class="chip-label">Pending</div>
+                <div class="chip-val"><%= statusCounts['Pending'] || 0 %></div>
+            </div>
+        </div>
+        <div class="stat-chip">
+            <div class="chip-icon" style="background:#f0fdf4; color:#15803d;"><i class="fa fa-truck"></i></div>
+            <div>
+                <div class="chip-label">Shipped</div>
+                <div class="chip-val"><%= statusCounts['Shipped'] || 0 %></div>
+            </div>
+        </div>
+        <div class="stat-chip">
+            <div class="chip-icon" style="background:#ecfdf5; color:#047857;"><i class="fa fa-check-circle"></i></div>
+            <div>
+                <div class="chip-label">Delivered</div>
+                <div class="chip-val"><%= statusCounts['Delivered'] || 0 %></div>
+            </div>
+        </div>
+        <div class="stat-chip">
+            <div class="chip-icon" style="background:#fef2f2; color:#b91c1c;"><i class="fa fa-times-circle"></i></div>
+            <div>
+                <div class="chip-label">Cancelled</div>
+                <div class="chip-val"><%= statusCounts['Cancelled'] || 0 %></div>
+            </div>
+        </div>
+        <div class="stat-chip">
+            <div class="chip-icon" style="background:#fdf4ff; color:#a21caf;"><i class="fa fa-undo-alt"></i></div>
+            <div>
+                <div class="chip-label">Returned</div>
+                <div class="chip-val"><%= statusCounts['Returned'] || 0 %></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Filter Tabs -->
+    <div class="status-tabs">
+        <a href="/admin/orders?search=<%= search %>" class="status-tab <%= statusFilter === '' ? 'active' : '' %>">
+            All <span class="tab-count"><%= totalOrders %></span>
+        </a>
+        <a href="/admin/orders?status=Pending&search=<%= search %>" class="status-tab <%= statusFilter === 'Pending' ? 'active' : '' %>">
+            Pending <span class="tab-count"><%= statusCounts['Pending'] || 0 %></span>
+        </a>
+        <a href="/admin/orders?status=Shipped&search=<%= search %>" class="status-tab <%= statusFilter === 'Shipped' ? 'active' : '' %>">
+            Shipped <span class="tab-count"><%= statusCounts['Shipped'] || 0 %></span>
+        </a>
+        <a href="/admin/orders?status=Delivered&search=<%= search %>" class="status-tab <%= statusFilter === 'Delivered' ? 'active' : '' %>">
+            Delivered <span class="tab-count"><%= statusCounts['Delivered'] || 0 %></span>
+        </a>
+        <a href="/admin/orders?status=Cancelled&search=<%= search %>" class="status-tab <%= statusFilter === 'Cancelled' ? 'active' : '' %>">
+            Cancelled <span class="tab-count"><%= statusCounts['Cancelled'] || 0 %></span>
+        </a>
+        <a href="/admin/orders?status=Returned&search=<%= search %>" class="status-tab <%= statusFilter === 'Returned' ? 'active' : '' %>">
+            Returned <span class="tab-count"><%= statusCounts['Returned'] || 0 %></span>
+        </a>
+    </div>
+
+    <!-- Search Filter Bar -->
+    <div class="filter-card">
+        <form action="/admin/orders" method="GET" class="d-flex flex-wrap gap-2 align-items-center">
+            <input type="hidden" name="status" value="<%= statusFilter %>">
+            <div class="input-group" style="max-width: 360px;">
+                <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa fa-search"></i></span>
+                <input type="text" name="search" value="<%= search %>" placeholder="Search by Order ID..." class="form-control border-start-0 ps-0" style="border-radius: 0 0.5rem 0.5rem 0;">
+            </div>
+            <button type="submit" class="btn btn-dark px-4 fw-semibold">Search</button>
+            <% if (search || statusFilter) { %>
+                <a href="/admin/orders" class="btn btn-outline-secondary">Clear</a>
+            <% } %>
+            <div class="ms-auto text-muted small">
+                Showing <strong><%= orders.length %></strong> of <strong><%= totalOrders %></strong> orders
+            </div>
+        </form>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="data-card">
+        <div class="table-responsive">
+            <table class="orders-table table">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                        <th>Payment</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th class="text-center" style="width: 80px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (orders && orders.length > 0) { %>
+                        <% orders.forEach(function(order, idx) { %>
+                            <tr>
+                                <td class="text-muted fw-bold text-center" style="font-size:0.78rem; font-family:monospace;">
+                                    <%= (currentPage - 1) * 10 + idx + 1 %>
+                                </td>
+                                <td>
+                                    <span class="order-id-badge">
+                                        #<%= order.orderId ? order.orderId.toString().substring(0, 10).toUpperCase() : order._id.toString().substring(0,8).toUpperCase() %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="user-info-block">
+                                        <div class="user-name"><%= order.userId && order.userId.name ? order.userId.name : 'Unknown' %></div>
+                                        <div class="user-email"><%= order.userId && order.userId.email ? order.userId.email : '' %></div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="items-count">
+                                        <% var firstItem = order.items && order.items[0]; %>
+                                        <% if (firstItem && firstItem.productId && firstItem.productId.name) { %>
+                                            <strong><%= firstItem.productId.name.length > 22 ? firstItem.productId.name.substring(0,22) + '...' : firstItem.productId.name %></strong>
+                                        <% } else { %>
+                                            <strong><%= order.items.length %> item<%= order.items.length !== 1 ? 's' : '' %></strong>
+                                        <% } %>
+                                        <% if (order.items.length > 1) { %>
+                                            <div class="text-muted" style="font-size:0.72rem;">+<%= order.items.length - 1 %> more</div>
+                                        <% } %>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="price-text">
+                                        <span class="currency">Rs.</span><%= (order.payableAmount || order.totalPrice || 0).toLocaleString('en-IN') %>
+                                    </span>
+                                    <% if (order.couponDiscount > 0) { %>
+                                        <div style="font-size:0.7rem; color:#16a34a;">
+                                            <i class="fa fa-tag me-1"></i>-Rs.<%= order.couponDiscount %>
+                                        </div>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <span class="payment-badge">
+                                        <% if (order.paymentMethod === 'Cash on Delivery') { %>
+                                            <i class="fa fa-money-bill me-1 text-success"></i>COD
+                                        <% } else if (order.paymentMethod === 'Razorpay') { %>
+                                            <i class="fa fa-credit-card me-1 text-primary"></i>Razorpay
+                                        <% } else if (order.paymentMethod) { %>
+                                            <i class="fa fa-wallet me-1 text-warning"></i><%= order.paymentMethod %>
+                                        <% } else { %>
+                                            <span class="text-muted">-</span>
+                                        <% } %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <% var s = order.status || 'Pending'; %>
+                                    <% var bm = {Pending:'badge-pending',Confirmed:'badge-confirmed',Shipped:'badge-shipped',Delivered:'badge-delivered',Cancelled:'badge-cancelled',Returned:'badge-returned',Paid:'badge-paid'}; %>
+                                    <span class="status-badge <%= bm[s] || 'badge-pending' %>"><%= s %></span>
+                                </td>
+                                <td>
+                                    <div style="font-size:0.82rem; color:#334155; font-weight:500;">
+                                        <%= new Date(order.createdAt).toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'}) %>
+                                    </div>
+                                    <div style="font-size:0.7rem; color:#94a3b8;">
+                                        <%= new Date(order.createdAt).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'}) %>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <a href="/admin/orders/<%= order._id %>" class="action-btn" title="View Order Details">
+                                        <i class="fa fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="9">
+                                <div class="empty-state">
+                                    <i class="fa fa-shopping-cart d-block"></i>
+                                    <h6 class="fw-bold text-dark">No Orders Found</h6>
+                                    <p class="small mb-0">
+                                        <% if (search || statusFilter) { %>
+                                            No orders match your current filters. <a href="/admin/orders">Clear filters</a>
+                                        <% } else { %>
+                                            Orders placed by customers will appear here.
+                                        <% } %>
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+
+        <% if (totalPages > 1) { %>
+            <div class="pagination-wrap">
+                <div class="text-muted small">Page <strong><%= currentPage %></strong> of <strong><%= totalPages %></strong></div>
+                <ul class="pagination custom-pagination mb-0">
+                    <% if (currentPage > 1) { %>
+                        <li class="page-item">
+                            <a class="page-link" href="/admin/orders?page=<%= currentPage - 1 %>&status=<%= statusFilter %>&search=<%= search %>">
+                                <i class="fa fa-chevron-left"></i>
+                            </a>
+                        </li>
+                    <% } %>
+                    <% for (var p = Math.max(1, currentPage - 2); p <= Math.min(totalPages, currentPage + 2); p++) { %>
+                        <li class="page-item <%= currentPage === p ? 'active' : '' %>">
+                            <a class="page-link" href="/admin/orders?page=<%= p %>&status=<%= statusFilter %>&search=<%= search %>"><%= p %></a>
+                        </li>
+                    <% } %>
+                    <% if (currentPage < totalPages) { %>
+                        <li class="page-item">
+                            <a class="page-link" href="/admin/orders?page=<%= currentPage + 1 %>&status=<%= statusFilter %>&search=<%= search %>">
+                                <i class="fa fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    <% } %>
+                </ul>
+            </div>
+        <% } %>
+    </div>
+
 </div>
-
-<table id="example" class="table table-striped" style="width:100%">
-    <thead>
-        <tr>
-            <th>Order ID</th>
-            <th>User</th>
-            <th>Items</th>
-            <th>Count</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-      <% orders.forEach(order => { %>
-          <tr>
-              <td><%= order._id %></td>
-              <td><%= order.userId.name %></td>
-              <td>
-                  <% order.items.forEach(item => { %>
-                     
-                  <% }) %>
-              </td>
-              <td>
-                  <% order.items.forEach(item => { %>
-                      <div><%= item.productCount %></div>
-                  <% }) %>
-              </td>
-              <td>
-                 
-                     
-
-                
-                    <!-- View Details Button -->
-                    <a href="/admin/orders/<%= order._id %>" class="btn btn-success btn-sm mt-2">View Details</a>
-                    
-                      
-                 
-              </td>
-          </tr>
-      <% }) %>
-  </tbody>
-</table>
-

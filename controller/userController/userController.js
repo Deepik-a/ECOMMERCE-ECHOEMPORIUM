@@ -28,100 +28,168 @@ const signup = (req, res) => {
 };
 
 const signupPost = async (req, res) => {
-  console.log(req.body)
+  console.log(req.body);
 
   try {
-    const details = {
-      name: req.body.name,
-      email: req.body.email,
-      password: await bcrypt.hash(req.body.password, 10),
-      confirmpassword: await bcrypt.hash(req.body.confirmpassword, 10),
-      phone: req.body.phone,
+    const email = (req.body.email || '').trim().toLowerCase();
+    const name = (req.body.name || '').trim();
+    const phone = (req.body.phone || '').trim();
 
-    };
-
-    const check = await userSchema.findOne({ email: details.email });
-
-    if (check) {
-      res.render("user/signup");
-    } else {
-     const otp= generateotp()
-      sendOTP(details.email,otp);
-      req.session.otp = otp;
-      req.session.otpTime = Date.now();
-      req.session.email = details.email;
-      req.session.name = details.name;
-      req.session.phone = details.phone;
-      req.session.password = details.password;
-      console.log(`Submitted OTP: ${req.body.otp}`);
-      console.log(`Session OTP: ${req.session.otp}`);
-      res.redirect("/otp");
+    if (!email || !name || !phone || !req.body.password) {
+      return res.render('user/signup', {
+        title: 'Please Signup',
+        user: null,
+        error: 'All fields are required.',
+      });
     }
+
+    const existingUser = await userSchema.findOne({ email });
+
+    if (existingUser) {
+      return res.render('user/signup', {
+        title: 'Please Signup',
+        user: null,
+        error: 'An account with this email already exists. Please log in instead.',
+      });
+    }
+
+    const otp = generateotp();
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
+
+    req.session.otp = otp;
+    req.session.otpTime = Date.now();
+    req.session.email = email;
+    req.session.name = name;
+    req.session.phone = phone;
+    req.session.password = hashedPassword;
+    req.session.otpMailWarning = false;
+
+    console.log(`Session OTP set: ${req.session.otp}`);
+
+    // Send email in background — never block redirect to OTP page
+    sendOTP(email, otp).catch((mailErr) => {
+      console.error('Failed to send OTP email:', mailErr.message);
+      req.session.otpMailWarning = true;
+
+
+
+      
+    });
+
+
+
+    return req.session.save((err) => {
+      if (err) {
+        console.error('Session save failed:', err);
+        return res.status(500).render('user/signup', {
+          title: 'Please Signup',
+          user: null,
+          error: 'Could not start verification. Please try again.',
+        });
+      }
+      return res.redirect('/otp');
+    });
   } catch (error) {
-    console.log(`error while renderin the page ${error}`);
+    console.error(`Error during signup: ${error}`);
+    return res.status(500).render('user/signup', {
+      title: 'Please Signup',
+      user: null,
+      error: 'Something went wrong. Please try again.',
+    });
   }
-
-
 };
 
 
-const otp=(req,res)=>{
-  try{
-   res.render('user/otp',{title:'OTP Verified',email: req.session.email,  otpTime: req.session.otpTime,}) 
-  }catch(error){
-    console.log('error');
+const otp = (req, res) => {
+  try {
+    if (!req.session.otp || !req.session.email) {
+      return res.redirect('/signup');
+    }
+
+    const mailWarning = req.session.otpMailWarning;
+    req.session.otpMailWarning = null;
+
+    return res.render('user/otp', {
+      title: 'OTP Verification',
+      email: req.session.email,
+      otpTime: req.session.otpTime,
+      mailWarning,
+    });
+  } catch (error) {
+    console.error('Error rendering OTP page:', error);
+    return res.redirect('/signup');
   }
-}
+};
 
 
 
 //------------------------------------ verify the otp -------------------------------
 
+const OTP_DURATION_MS = 2 * 60 * 1000;
+
 const otppost=async(req,res)=>{
-  // console.log("entered post");
   try{
     console.log("entered try");
+    console.log(`Body OTP: ${req.body.otp} | Session OTP: ${req.session.otp}`);
+
+    if (!req.session.otp || !req.session.otpTime) {
+      return res.redirect('/signup');
+    }
+
+    if (Date.now() - req.session.otpTime > OTP_DURATION_MS) {
+      console.log('OTP expired');
+      return res.redirect('/otp');
+    }
+
     if(req.body.otp===req.session.otp){
-      console.log("entered 1st if");
+      console.log("OTP matched");
+      // ⚠️ req.session.password is already bcrypt-hashed from signupPost — do NOT hash again
       const details = {
         name: req.session.name,
         email: req.session.email,
-        password: await bcrypt.hash(req.session.password, 10),
-        phone: req.session.phone,
+        password: req.session.password,
+        phone: Number(req.session.phone),
       };
-    await userSchema.insertMany([details])
-    .then(()=>{
-      console.log(`new user registeres successfully`)
-      res.redirect('/login')
-    }).catch((error)=>{
-      console.log(`error while user signup ${error}`)
-    })
-    console.log("entered await");
-    }else{
-      res.redirect('/otp')
+      await userSchema.insertMany([details]);
+      console.log(`New user registered successfully`);
+      // Clear sensitive session data after successful signup
+      req.session.otp = null;
+      req.session.otpTime = null;
+      req.session.password = null;
+      return res.redirect('/login');
+    } else {
+      console.log('OTP mismatch');
+      return res.redirect('/otp');
     }
- 
-  }catch (error) {
-    console.log(`error while renderin the page ${error}`);
+  } catch (error) {
+    console.log(`Error while verifying OTP: ${error}`);
+    res.status(500).send('Server Error');
   }
-
 }
 
 
 //-------------------------------------- Otp Resent ---------------------------------
 
-const otpResend=(req,res)=>{
-
+const otpResend=async(req,res)=>{
   try{
-const email=req.session.email
-const otp=generateotp()
-sendOTP(email,otp)
-req.session.otp=otp
-req.session.otpTime=Date.now()
-console.log("OTP sent succesfully");
-res.redirect('/otp')
+    const email=req.session.email
+    if(!email){
+      return res.redirect('/signup')
+    }
+    const otp=generateotp()
+    req.session.otp=otp
+    req.session.otpTime=Date.now()
+    try {
+      await sendOTP(email,otp)
+    } catch (mailErr) {
+      console.error('Failed to resend OTP email:', mailErr.message)
+      req.session.otpMailWarning = true
+    }
+    console.log("OTP resent (check email or server console)");
+    res.redirect('/otp')
   }catch(error){
     console.log(`error while resend otp ${error}`)
+    res.redirect('/otp')
   }
 }
 
@@ -132,19 +200,24 @@ const login = async (req, res) => {
     const categories = await categorySchema.find({ isDeleted: false });
 
     if (req.session.user) {
-      // Fetch products only if the user is logged in
-      const products = await productSchema.find({ isActive: true });
-
-      // Render Landingpage with user session data
-      return res.render('user/Landingpage', {
-        categories,
-        user: req.session.user,
-        products,
-      });
+      return res.redirect('/');
     }
 
-    // Render login page if no active session
-    res.render('user/login', { title: 'Login', user: null });
+    const errorMap = {
+      userNotFound: 'No account found with that email.',
+      blocked: 'Your account has been blocked.',
+      invalidPassword: 'Incorrect password.',
+      useGoogle: 'This account uses Google Sign-In. Please continue with Google.',
+      googleAuthFailed: 'Google sign-in failed. Please try again.',
+      serverError: 'Something went wrong. Please try again.',
+    };
+
+    res.render('user/login', {
+      title: 'Login',
+      user: null,
+      alertMessage: errorMap[req.query.error] || '',
+      categories,
+    });
   } catch (error) {
     console.error(`Error in GET /login: ${error.message}`);
     res.status(500).send('Internal Server Error');
@@ -156,41 +229,29 @@ const loginpost = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find user by email
     const user = await userSchema.findOne({ email });
     if (!user) {
-      // Redirect if the user does not exist
       return res.redirect('/login?error=userNotFound');
     }
 
-    // Check if the user is blocked
     if (user.isBlocked) {
       return res.redirect('/login?error=blocked');
     }
 
-    // Check if the password is correct
-    // const isMatch = await bcrypt.compare(password, user.password); // Assuming bcrypt is used
-    // if (!isMatch) {
-    //   return res.redirect('/login?error=invalidPassword');
-    // }
+    // Google-only accounts have no local password
+    if (!user.password) {
+      return res.redirect('/login?error=useGoogle');
+    }
 
-    // Set session for the logged-in user
-    req.session.user = user;
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      return res.redirect('/login?error=invalidPassword');
+    }
 
-    // Fetch categories and products
-    const categories = await categorySchema.find({ isDeleted: false });
-    const products = await productSchema.find({ isActive: true });
-
-    // Debugging
-    console.log('User found and session set:', user);
-    console.log('Categories:', categories);
-    console.log('Products:', products);
-
-    // Redirect to the landing page after successful login
-    res.render('user/Landingpage', { categories, user, products });
+    req.session.user = user._id;
+    return res.redirect('/');
   } catch (error) {
     console.error(`Error during login: ${error.message}`);
-    // Redirect to login with a generic error
     res.redirect('/login?error=serverError');
   }
 };

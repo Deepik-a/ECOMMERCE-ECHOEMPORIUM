@@ -15,10 +15,14 @@ const isAdmin = require('../middleware/adminSession');
 
 
 
-//--------------------------------admin login----------------------------
-admin.get('/login',adminController.admin)
-// admin.get('/login',adminController.adminlogin)
-admin.post('/login',adminController.adminloginpost)
+//--------------------------------admin authentication & dashboard----------------------------
+admin.get('/', (req, res) => res.redirect('/admin/dashboard'));
+admin.get('/index.html', (req, res) => res.redirect('/admin/dashboard'));
+admin.get('/login', adminController.admin);
+admin.post('/login', adminController.adminloginpost);
+admin.get('/logout', adminController.logout);
+admin.get('/dashboard', isAdmin, adminController.getDashboard);
+admin.get('/dashboard-data', isAdmin, adminController.getDashboardData);
 
 
 
@@ -29,14 +33,18 @@ admin.get('/unblock/:ideee',isAdmin,adminController.unblockUser)
 
 
 //--------------------------------CategoryManagment----------------------------
-admin.get('/addCategory', isAdmin,adminController.getCategories);
-admin.post('/addCategory', isAdmin,categoryController.addCategory);
-admin.get('/editCategory',isAdmin,categoryController.geteditCategories);
-admin.get('/editCategory/:id',isAdmin,categoryController.renderEditCategoryForm);
-admin.post('/editCategory/:id',isAdmin,categoryController.editCategory);
-admin.post('/categories/:id/block',isAdmin,categoryController.blockCategory);
-admin.post('/categories/:id/unblock',isAdmin,categoryController.unblockCategory);
-admin.get('/categories', isAdmin,categoryController.getCategoriesForUser);
+admin.get('/addCategory', isAdmin, adminController.getCategories);
+admin.post('/addCategory', isAdmin, categoryController.addCategory);
+admin.get('/editCategory', isAdmin, (req, res) => res.redirect('/admin/categories'));
+admin.get('/editCategory/:id', isAdmin, categoryController.renderEditCategoryForm);
+admin.post('/editCategory/:id', isAdmin, categoryController.editCategory);
+admin.post('/categories/:id/edit', isAdmin, categoryController.editCategory);
+admin.post('/categories/:id/block', isAdmin, categoryController.blockCategory);
+admin.post('/categories/:id/unblock', isAdmin, categoryController.unblockCategory);
+admin.post('/categories/:id/delete', isAdmin, categoryController.deleteCategory);
+admin.delete('/categories/:id', isAdmin, categoryController.deleteCategory);
+admin.get('/categories', isAdmin, categoryController.geteditCategories);
+admin.get('/api/categories', isAdmin, categoryController.getCategoriesForUser);
 
 
 // //--------------------------------ProductManagment----------------------------
@@ -53,22 +61,24 @@ admin.get('/categories', isAdmin,categoryController.getCategoriesForUser);
 //admin.post('/updateproduct/:id',isAdmin,uploads,productController.postEditProduct);
 
 // --- Product Management ---
-admin.get('/products',isAdmin, productController.getAllProducts);
-admin.get('/addproduct',isAdmin, productController.getAddProduct);
-admin.post('/addproduct',isAdmin, uploads, productController.postAddProduct);
-admin.post('/products/:id/block',isAdmin, productController.BlockUnblock);
-admin.get('/updateproduct/:id',isAdmin, productController.getUpdateProduct);
-admin.post('/updateproduct/:id',isAdmin, uploads, productController.postEditProduct);
+admin.get('/products', isAdmin, productController.getAllProducts);
+admin.get('/addproduct', isAdmin, productController.getAddProduct);
+admin.post('/addproduct', isAdmin, uploads, productController.postAddProduct);
+admin.post('/products/:id/block', isAdmin, productController.BlockUnblock);
+admin.post('/products/:id/delete', isAdmin, productController.deleteProduct);
+admin.delete('/products/:id', isAdmin, productController.deleteProduct);
+admin.get('/updateproduct/:id', isAdmin, productController.getUpdateProduct);
+admin.post('/updateproduct/:id', isAdmin, uploads, productController.postEditProduct);
 
 
 //--------------------------------Order Management Routes----------------------------
 
 
-admin.get('/orders', orderController.listOrders);
-admin.post('/orders/item-status',orderController.changeProductStatus)
-admin.post('/orders/cancel', orderController.cancelOrder);
+admin.get('/orders', isAdmin, orderController.listOrders);
+admin.post('/orders/item-status', isAdmin, orderController.changeProductStatus)
+admin.post('/orders/cancel', isAdmin, orderController.cancelOrder);
 // Route to view order details
-admin.get('/orders/:orderId', orderController.viewOrderDetails);
+admin.get('/orders/:orderId', isAdmin, orderController.viewOrderDetails);
 
 
 //-------------------------------- Inventory Management Routes---------------------------------
@@ -80,15 +90,11 @@ admin.post('/inventory/update', orderController.updateStock);
 
 
 
-admin.get('/coupons/:id?',  couponController.getCoupons);
-
-admin.post('/addcoupon',  couponController.addCoupon);
-
-admin.post('/editcoupon/:id',  couponController.editCoupon);
-
-admin.get('/statuscoupon',  couponController.toggleCouponStatus);
-
-admin.delete('/deletecoupon/:id',  couponController.deleteCoupon);
+admin.get('/coupons/:id?', isAdmin, couponController.getCoupons);
+admin.post('/addcoupon', isAdmin, couponController.addCoupon);
+admin.post('/editcoupon/:id', isAdmin, couponController.editCoupon);
+admin.get('/statuscoupon', isAdmin, couponController.toggleCouponStatus);
+admin.delete('/deletecoupon/:id', isAdmin, couponController.deleteCoupon);
 
 
 //-------------------------------- Offer Management---------------------------------

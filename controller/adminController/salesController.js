@@ -1,6 +1,6 @@
 const Order = require('../../model/orderSchema')
 const xlsx = require('xlsx');
-const PDFDocument = require('pdfkit')
+const PDFDocument = require('pdfkit-table');
 
 
 
@@ -141,12 +141,12 @@ const applyDateFilter = (filter) => {
         if (format === 'excel') {
             console.log('Generating Excel report');
             const worksheetData = salesData.map(data => ({
-                OrderID: data.orderId,
+                OrderID: data.orderId || (data._id ? data._id.toString().slice(-8) : 'N/A'),
                 OrderDate: new Date(data.createdAt).toLocaleDateString('en-GB'),
-                OrderAmount: `₹${data.totalPrice.toFixed(2)}`,
-                CouponDeduction: `₹${data.couponDiscount.toFixed(2)}`,
-                PaymentStatus: data.orderStatus,
-                PaymentMethod: data.paymentMethod,
+                OrderAmount: `₹${(data.totalPrice || 0).toFixed(2)}`,
+                CouponDeduction: `₹${(data.couponDiscount || 0).toFixed(2)}`,
+                PaymentStatus: data.status || 'Pending',
+                PaymentMethod: data.paymentMethod || 'N/A',
             }));
 
             // Create worksheet and workbook
@@ -155,76 +155,73 @@ const applyDateFilter = (filter) => {
             xlsx.utils.book_append_sheet(workbook, worksheet, 'Sales Report');
 
             const excelBuffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
-            res.setHeader('Content-Disposition', 'attachment; filename="sales_report.xlsx"');
+            res.setHeader('Content-Disposition', 'attachment; filename="EchoEmporium_SalesReport.xlsx"');
             res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             return res.send(excelBuffer);
         } 
         else if (format === 'pdf') {
-            console.log('Generating PDF report');
-            const doc = new PDFDocument();
-            res.setHeader('Content-Disposition', 'attachment; filename="sales_report.pdf"');
+            console.log('Generating PDF report for Echo Emporium');
+            const doc = new PDFDocument({ margin: 30, size: 'A4' });
+            res.setHeader('Content-Disposition', 'attachment; filename="EchoEmporium_SalesReport.pdf"');
             res.setHeader('Content-Type', 'application/pdf');
             doc.pipe(res);
 
-            // Document title
-            doc.fontSize(20).font('Helvetica-Bold').text('CoveHive Sales Report', { align: 'center' });
-            doc.moveDown(2);
+            // Document Header / Branding
+            doc.fontSize(22).font('Helvetica-Bold').fillColor('#1e3a8a').text('Echo Emporium', { align: 'center' });
+            doc.fontSize(14).font('Helvetica').fillColor('#4b5563').text('Sales & Revenue Report', { align: 'center' });
+            doc.moveDown(0.5);
 
-            // Table configuration
-            const tableTop = 150;
-            const startX = 30;
-            const rowHeight = 30;
-            const cellPadding = 5;
-            const tableWidth = 650;
+            const filterLabel = filter ? (filter.charAt(0).toUpperCase() + filter.slice(1)) : 'All Time';
+            doc.fontSize(9).font('Helvetica').fillColor('#6b7280')
+                .text(`Filter: ${filterLabel} | Generated On: ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`, { align: 'center' });
+            doc.moveDown(1);
 
-            // Define columns and their widths
-            const columns = [
-                { label: 'Order ID', width: 60 },
-                { label: 'User ID', width: 90 },
-                { label: 'Order Date', width: 80 },
-                { label: 'Order Amount', width: 100 },
-                { label: 'Coupon Deduction', width: 70 },
-                { label: 'Payment Status', width: 70 },
-                { label: 'Payment Method', width: 100 }
-            ];
+            const totalOrders = salesData.length;
+            const totalRevenue = salesData.reduce((acc, curr) => acc + (curr.totalPrice || 0), 0);
+            const totalDiscount = salesData.reduce((acc, curr) => acc + (curr.couponDiscount || 0), 0);
 
-            function drawTableBorders(x, y, width, height) {
-                doc.rect(x, y, width, height).stroke();
-            }
+            // Summary Highlights Box
+            const summaryBoxY = doc.y;
+            doc.rect(30, summaryBoxY, 535, 28).fillAndStroke('#f3f4f6', '#e5e7eb');
+            doc.fillColor('#111827').font('Helvetica-Bold').fontSize(9)
+                .text(`Total Orders: ${totalOrders}`, 45, summaryBoxY + 9)
+                .text(`Total Revenue: ₹${totalRevenue.toFixed(2)}`, 210, summaryBoxY + 9)
+                .text(`Total Discounts: ₹${totalDiscount.toFixed(2)}`, 385, summaryBoxY + 9);
+            doc.moveDown(1.8);
 
-            let x = startX;
-            let y = tableTop;
-
-            doc.fontSize(12).font('Helvetica-Bold');
-            columns.forEach(column => {
-                doc.text(column.label, x + cellPadding, y + cellPadding, { width: column.width - 2 * cellPadding, align: 'left' });
-                drawTableBorders(x, y, column.width, rowHeight);
-                x += column.width;
+            const tableRows = salesData.map((data) => {
+                const userIdStr = data.userId ? data.userId.toString() : 'N/A';
+                const truncatedUserId = userIdStr.length > 10 ? `${userIdStr.slice(0, 4)}...${userIdStr.slice(-4)}` : userIdStr;
+                return [
+                    data.orderId || (data._id ? data._id.toString().slice(-8) : 'N/A'),
+                    truncatedUserId,
+                    new Date(data.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+                    `₹${(data.totalPrice || 0).toFixed(2)}`,
+                    `₹${(data.couponDiscount || 0).toFixed(2)}`,
+                    data.status || 'Pending',
+                    data.paymentMethod || 'N/A'
+                ];
             });
 
-            y += rowHeight;
-            doc.font('Helvetica').fontSize(10);
+            const table = {
+                title: 'Order Details',
+                headers: [
+                    { label: 'Order ID', width: 95 },
+                    { label: 'User ID', width: 75 },
+                    { label: 'Date', width: 65 },
+                    { label: 'Amount', width: 75 },
+                    { label: 'Discount', width: 65 },
+                    { label: 'Status', width: 70 },
+                    { label: 'Payment Method', width: 90 }
+                ],
+                rows: tableRows
+            };
 
-            salesData.forEach((data) => {
-                x = startX;
-                const truncatedUserId = `${data.userId.toString().substring(0, 6)}....${data.userId.toString().substring(data.userId.toString().length - 6)}`;
-                const rowData = [
-                    data.orderId,
-                    truncatedUserId,
-                    new Date(data.createdAt).toLocaleDateString('en-GB'),
-                    `₹${data.totalPrice.toFixed(2)}`,
-                    `₹${data.couponDiscount.toFixed(2)}`,
-                    data.orderStatus,
-                    data.paymentMethod
-                ];
-
-                rowData.forEach((text, i) => {
-                    doc.text(text, x + cellPadding, y + cellPadding, { width: columns[i].width - 2 * cellPadding, align: 'left' });
-                    drawTableBorders(x, y, columns[i].width, rowHeight);
-                    x += columns[i].width;
-                });
-
-                y += rowHeight;
+            await doc.table(table, {
+                prepareHeader: () => doc.font('Helvetica-Bold').fontSize(9).fillColor('#111827'),
+                prepareRow: (row, indexColumn, indexRow, rectRow, rectCell) => {
+                    doc.font('Helvetica').fontSize(8.5).fillColor('#374151');
+                }
             });
 
             doc.end();

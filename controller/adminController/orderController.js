@@ -5,18 +5,58 @@ const mongoose = require('mongoose');
 
 
 
-// List all orders
+// List all orders with pagination, search, and filter
 const listOrders = async (req, res) => {
     try {
-        const orders = await Order.find()
-            .populate('userId') // Populating user details
-            .populate('items.productId'); // Populating product details within items
-        res.render('admin/order', { orders }); // Render orders to the admin page
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10;
+        const skip = (page - 1) * limit;
+        const search = req.query.search || '';
+        const statusFilter = req.query.status || '';
+
+        // Build query
+        let query = {};
+        if (statusFilter) {
+            query.status = statusFilter;
+        }
+        if (search) {
+            query.$or = [
+                { orderId: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const totalOrders = await Order.countDocuments(query);
+        const totalPages = Math.ceil(totalOrders / limit);
+
+        const orders = await Order.find(query)
+            .populate('userId', 'name email')
+            .populate('items.productId', 'name imgArray')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        // Summary stats
+        const allStatusCounts = await Order.aggregate([
+            { $group: { _id: '$status', count: { $sum: 1 } } }
+        ]);
+        const statusCounts = {};
+        allStatusCounts.forEach(s => { statusCounts[s._id] = s.count; });
+
+        res.render('admin/order', {
+            orders,
+            currentPage: page,
+            totalPages,
+            totalOrders,
+            search,
+            statusFilter,
+            statusCounts
+        });
     } catch (error) {
         console.error('Error fetching orders:', error);
         res.status(500).send('Error fetching orders');
     }
 };
+
 
 // Change order status
 const changeProductStatus = async (req, res) => {

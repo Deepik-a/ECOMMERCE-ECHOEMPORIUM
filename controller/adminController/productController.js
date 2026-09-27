@@ -436,28 +436,207 @@
 // ====================
 const path = require('path');
 const fs = require('fs');
+const mongoose = require('mongoose');
 const category = require('../../model/categorySchema');
 const productSchema = require('../../model/productSchema');
 
-// Get all products with pagination
+// Helper function to sanitize text and remove HTML tags
+const sanitizeText = (str) => {
+    if (typeof str !== 'string') return '';
+    return str.replace(/<[^>]*>?/gm, '').trim();
+};
+
+// Helper function to escape regex special characters
+const escapeRegex = (text) => {
+    return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+};
+
+// Helper to clean up uploaded files if validation fails
+const cleanupUploadedFiles = (files) => {
+    if (files && files.length > 0) {
+        files.forEach(file => {
+            try {
+                if (file.path && fs.existsSync(file.path)) {
+                    fs.unlinkSync(file.path);
+                }
+            } catch (err) {
+                console.error('Error deleting file:', file.path, err);
+            }
+        });
+    }
+};
+
+// Reusable server-side validation for Product data
+const validateProductInput = async ({
+    name,
+    description,
+    price,
+    discount,
+    stock,
+    categoryId,
+    existingProductId = null,
+    totalImagesCount = 0
+}) => {
+    const errors = {};
+
+    // 1. Product Name Validation
+    const trimmedName = (name || '').trim();
+    if (!trimmedName) {
+        errors.productName = 'Product name is required and cannot be empty.';
+    } else if (trimmedName.length < 3) {
+        errors.productName = 'Product name must be at least 3 characters.';
+    } else if (trimmedName.length > 100) {
+        errors.productName = 'Product name cannot exceed 100 characters.';
+    } else if (!/[a-zA-Z]/.test(trimmedName)) {
+        errors.productName = 'Product name must contain letters and cannot consist only of numbers or special characters.';
+    } else if (/^[^a-zA-Z0-9]+$/.test(trimmedName)) {
+        errors.productName = 'Product name cannot consist only of special characters.';
+    }
+
+    // 2. Category Validation (Validate against DB)
+    let validCategory = null;
+    if (!categoryId || categoryId === 'Select a category') {
+        errors.category = 'Please select a valid category.';
+    } else if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+        errors.category = 'Invalid category selected.';
+    } else {
+        validCategory = await category.findOne({ _id: categoryId, isDeleted: false });
+        if (!validCategory) {
+            errors.category = 'Selected category does not exist or has been disabled.';
+        }
+    }
+
+    // Duplicate product name check within the same category
+    if (!errors.productName && validCategory) {
+        const query = {
+            name: { $regex: new RegExp(`^${escapeRegex(trimmedName)}$`, 'i') },
+            category: categoryId
+        };
+        if (existingProductId) {
+            query._id = { $ne: existingProductId };
+        }
+        const duplicate = await productSchema.findOne(query);
+        if (duplicate) {
+            errors.productName = 'A product with this name already exists in the selected category.';
+        }
+    }
+
+    // 3. Description Validation (Sanitize HTML tags and check length)
+    const sanitizedDesc = sanitizeText(description);
+    if (!sanitizedDesc) {
+        errors.description = 'Product description is required.';
+    } else if (sanitizedDesc.length < 20) {
+        errors.description = 'Product description must be at least 20 characters long.';
+    } else if (sanitizedDesc.length > 2000) {
+        errors.description = 'Product description cannot exceed 2000 characters.';
+    }
+
+    // 4. Price Validation
+    let numPrice = 0;
+    if (price === undefined || price === null || String(price).trim() === '') {
+        errors.price = 'Product price is required.';
+    } else {
+        const priceStr = String(price).trim();
+        numPrice = parseFloat(price);
+        if (isNaN(numPrice) || !/^\d+(\.\d{1,2})?$/.test(priceStr)) {
+            errors.price = 'Price must be a valid number with at most 2 decimal places.';
+        } else if (numPrice <= 0) {
+            errors.price = 'Price must be greater than zero.';
+        } else if (numPrice > 1000000) {
+            errors.price = 'Price cannot exceed ₹1,000,000.';
+        }
+    }
+
+    // 5. Discount Validation
+    let numDiscount = 0;
+    if (discount !== undefined && discount !== null && String(discount).trim() !== '') {
+        const discountStr = String(discount).trim();
+        numDiscount = parseFloat(discount);
+        if (isNaN(numDiscount) || !/^\d+(\.\d{1,2})?$/.test(discountStr)) {
+            errors.discount = 'Discount must be a valid number (max 2 decimal places).';
+        } else if (numDiscount < 0 || numDiscount >= 100) {
+            errors.discount = 'Discount percentage must be between 0 and 99%.';
+        }
+    }
+
+    // Cross-field check: final discounted price must be > 0
+    if (!errors.price && !errors.discount) {
+        const finalPrice = numPrice - (numPrice * (numDiscount / 100));
+        if (finalPrice <= 0) {
+            errors.discount = 'Discounted price must be greater than zero.';
+        }
+    }
+
+    // 6. Stock Validation
+    let numStock = 0;
+    if (stock === undefined || stock === null || String(stock).trim() === '') {
+        errors.stock = 'Stock is required.';
+    } else {
+        const stockStr = String(stock).trim();
+        numStock = Number(stock);
+        if (isNaN(numStock) || !/^\d+$/.test(stockStr) || !Number.isInteger(numStock)) {
+            errors.stock = 'Stock must be a non-negative whole integer (no decimals).';
+        } else if (numStock < 0) {
+            errors.stock = 'Stock cannot be negative.';
+        } else if (numStock > 500) {
+            errors.stock = 'Stock cannot exceed 500 units.';
+        }
+    }
+
+    // 7. Images Validation
+    if (totalImagesCount < 3) {
+        errors.images = `At least 3 product images are required (current: ${totalImagesCount}).`;
+    }
+
+    const finalPrice = numPrice - (numPrice * (numDiscount / 100));
+
+    return {
+        isValid: Object.keys(errors).length === 0,
+        errors,
+        sanitizedData: {
+            name: trimmedName,
+            description: sanitizedDesc,
+            price: numPrice,
+            discount: numDiscount,
+            stock: numStock,
+            category: categoryId,
+            finalPrice: Math.round(finalPrice * 100) / 100
+        }
+    };
+};
+
+// Get all products with pagination and search
 exports.getAllProducts = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = 10;
         const offset = (page - 1) * limit;
+        const search = (req.query.search || '').trim();
+
+        let query = {};
+        if (search) {
+            query.name = { $regex: new RegExp(escapeRegex(search), 'i') };
+        }
 
         const [products, totalProducts] = await Promise.all([
-            productSchema.find()
+            productSchema.find(query)
                 .populate('category')
                 .sort({ createdAt: -1 })
                 .skip(offset)
                 .limit(limit),
-            productSchema.countDocuments()
+            productSchema.countDocuments(query)
         ]);
 
-        const totalPages = Math.ceil(totalProducts / limit);
+        const totalPages = Math.ceil(totalProducts / limit) || 1;
 
-        res.render('admin/products', { products, currentPage: page, totalPages, limit });
+        res.render('admin/products', {
+            products,
+            currentPage: page,
+            totalPages,
+            limit,
+            totalProducts,
+            search
+        });
     } catch (error) {
         console.error('Error fetching products:', error);
         res.status(500).send('Internal Server Error');
@@ -478,58 +657,61 @@ exports.getAddProduct = async (req, res) => {
 // Add a new product
 exports.postAddProduct = async (req, res) => {
     try {
-        // Log the incoming request body
-        console.log('Request Body:', req.body);
-
         const {
-            productName, description, price, discount = 0, stock, category
+            productName, description, price, discount, stock, category: categoryId
         } = req.body;
 
-        // Log parsed input values
-        console.log('Parsed Input Values:');
-        console.log('Product Name:', productName);
-        console.log('Description:', description);
-        console.log('Price:', price);
-        console.log('Discount:', discount);
-        console.log('Stock:', stock);
-        console.log('Category:', category);
+        const files = req.files || [];
+        const totalImagesCount = files.length;
 
-        if (price < 0 || stock < 0) {
-            console.log('Invalid Price or Stock. Must be non-negative.');
-            return res.status(400).json({ message: 'Price and Stock must be non-negative' });
-        }
-
-        // Log uploaded files
-        console.log('Uploaded Files:', req.files);
-
-        const images = req.files.map(file => file.filename);
-        console.log('Mapped Images Array:', images);
-
-        const finalPrice = price - (price * (discount / 100));
-        console.log('Calculated Final Price:', finalPrice);
-
-        const newProduct = new productSchema({
+        // Run validation
+        const validation = await validateProductInput({
             name: productName,
             description,
             price,
             discount,
             stock,
-            category,
-            imgArray: images,
-            finalPrice
+            categoryId,
+            existingProductId: null,
+            totalImagesCount
         });
 
-        // Log the new product object
-        console.log('New Product Object:', newProduct);
+        if (!validation.isValid) {
+            cleanupUploadedFiles(files);
+            const firstErrorMessage = Object.values(validation.errors)[0];
+            return res.status(400).json({
+                success: false,
+                message: firstErrorMessage,
+                errors: validation.errors
+            });
+        }
+
+        const images = files.map(file => file.filename);
+
+        const newProduct = new productSchema({
+            name: validation.sanitizedData.name,
+            description: validation.sanitizedData.description,
+            price: validation.sanitizedData.price,
+            discount: validation.sanitizedData.discount,
+            stock: validation.sanitizedData.stock,
+            category: validation.sanitizedData.category,
+            imgArray: images,
+            finalPrice: validation.sanitizedData.finalPrice
+        });
 
         await newProduct.save();
 
-        console.log('Product successfully added to the database.');
-        res.status(200).json({ success: true, message: 'Product Successfully Added!' });
+        res.status(200).json({
+            success: true,
+            message: 'Product Successfully Added!'
+        });
     } catch (error) {
-        // Log any errors that occur
+        cleanupUploadedFiles(req.files);
         console.error('Failed to add product:', error);
-        res.status(500).json({ message: 'Failed to add Product' });
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to add Product'
+        });
     }
 };
 
@@ -540,28 +722,34 @@ exports.BlockUnblock = async (req, res) => {
     try {
         const product = await productSchema.findById(productId);
         if (!product) {
-            return res.status(404).json({ message: 'Product not found' });
+            return res.status(404).json({ success: false, message: 'Product not found' });
         }
 
         product.isActive = active; // Set active status
         await product.save();
 
-        res.status(200).json({ message: active ? 'Product unblocked' : 'Product blocked', product });
+        res.status(200).json({ success: true, message: active ? 'Product unblocked' : 'Product blocked', product });
     } catch (error) {
         console.error('Error blocking/unblocking product:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 };
-
 
 // Render form to edit a product
 exports.getUpdateProduct = async (req, res) => {
     const productId = req.params.id;
 
     try {
-        const product = await productSchema.findById(productId);
-        const categories = await category.find({ isDeleted: false });
+        if (!mongoose.Types.ObjectId.isValid(productId)) {
+            return res.redirect('/admin/products');
+        }
 
+        const product = await productSchema.findById(productId);
+        if (!product) {
+            return res.redirect('/admin/products');
+        }
+
+        const categories = await category.find({ isDeleted: false });
         res.render('admin/editProduct', { product, categories });
     } catch (error) {
         console.error('Error fetching product for editing:', error);
@@ -572,39 +760,138 @@ exports.getUpdateProduct = async (req, res) => {
 // Edit a product
 exports.postEditProduct = async (req, res) => {
     const productId = req.params.id;
-    const removedImages = JSON.parse(req.body.removedImages || '[]');
-    const newImages = req.files;
+    const newFiles = req.files || [];
 
     try {
-        let product = await productSchema.findById(productId);
-        if (!product) {
-            return res.status(404).json({ message: 'Product Not Found!' });
+        if (!mongoose.Types.ObjectId.isValid(productId)) {
+            cleanupUploadedFiles(newFiles);
+            return res.status(404).json({ success: false, message: 'Invalid Product ID!' });
         }
 
-        Object.assign(product, req.body);
+        let product = await productSchema.findById(productId);
+        if (!product) {
+            cleanupUploadedFiles(newFiles);
+            return res.status(404).json({ success: false, message: 'Product Not Found!' });
+        }
 
+        let removedImages = [];
+        try {
+            removedImages = JSON.parse(req.body.removedImages || '[]');
+        } catch (e) {
+            removedImages = [];
+        }
+
+        const { name, description, price, discount, stock, category: categoryId } = req.body;
+
+        const remainingExistingCount = product.imgArray.filter(img => !removedImages.includes(img)).length;
+        const totalImagesCount = remainingExistingCount + newFiles.length;
+
+        // Run validation
+        const validation = await validateProductInput({
+            name: name !== undefined ? name : product.name,
+            description: description !== undefined ? description : product.description,
+            price: price !== undefined ? price : product.price,
+            discount: discount !== undefined ? discount : product.discount,
+            stock: stock !== undefined ? stock : product.stock,
+            categoryId: categoryId !== undefined ? categoryId : product.category,
+            existingProductId: productId,
+            totalImagesCount
+        });
+
+        if (!validation.isValid) {
+            cleanupUploadedFiles(newFiles);
+            const firstErrorMessage = Object.values(validation.errors)[0];
+            return res.status(400).json({
+                success: false,
+                message: firstErrorMessage,
+                errors: validation.errors
+            });
+        }
+
+        // Apply validated changes
+        product.name = validation.sanitizedData.name;
+        product.description = validation.sanitizedData.description;
+        product.category = validation.sanitizedData.category;
+        product.price = validation.sanitizedData.price;
+        product.discount = validation.sanitizedData.discount;
+        product.stock = validation.sanitizedData.stock;
+        product.finalPrice = validation.sanitizedData.finalPrice;
+
+        // Process removed images
         if (removedImages.length > 0) {
             product.imgArray = product.imgArray.filter(img => !removedImages.includes(img));
             removedImages.forEach(image => {
-                const filePath = path.join('uploads', image);
+                const filePath = path.join(__dirname, '../../uploads', image);
                 if (fs.existsSync(filePath)) {
-                    fs.unlinkSync(filePath);
+                    try {
+                        fs.unlinkSync(filePath);
+                    } catch (err) {
+                        console.error('Error removing old image file:', filePath, err);
+                    }
                 }
             });
         }
 
-        if (newImages && newImages.length > 0) {
-            newImages.forEach(file => {
+        // Add new images
+        if (newFiles.length > 0) {
+            newFiles.forEach(file => {
                 product.imgArray.push(file.filename);
             });
         }
 
-        product.finalPrice = product.price - (product.price * (product.discount / 100));
-
         await product.save();
-        res.status(200).json({ message: 'Product Updated Successfully' });
+        res.status(200).json({ success: true, message: 'Product Updated Successfully' });
     } catch (error) {
+        cleanupUploadedFiles(newFiles);
         console.error('Error updating product:', error);
-        res.status(500).json({ message: 'An error occurred while updating the product!' });
+        res.status(500).json({
+            success: false,
+            message: error.message || 'An error occurred while updating the product!'
+        });
     }
 };
+
+// Delete a product permanently
+exports.deleteProduct = async (req, res) => {
+    const productId = req.params.id;
+
+    try {
+        if (!mongoose.Types.ObjectId.isValid(productId)) {
+            return res.status(400).json({ success: false, message: 'Invalid product ID' });
+        }
+
+        const product = await productSchema.findById(productId);
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+
+        // Clean up associated images from uploads directory
+        if (product.imgArray && product.imgArray.length > 0) {
+            product.imgArray.forEach(image => {
+                const filePath = path.join(__dirname, '../../uploads', image);
+                if (fs.existsSync(filePath)) {
+                    try {
+                        fs.unlinkSync(filePath);
+                    } catch (err) {
+                        console.error('Error deleting product image file:', filePath, err);
+                    }
+                }
+            });
+        }
+
+        // Delete from database
+        await productSchema.findByIdAndDelete(productId);
+
+        res.status(200).json({
+            success: true,
+            message: 'Product deleted successfully'
+        });
+    } catch (error) {
+        console.error('Error deleting product:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to delete product'
+        });
+    }
+};
+

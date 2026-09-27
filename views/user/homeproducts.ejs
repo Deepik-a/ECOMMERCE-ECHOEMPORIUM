@@ -1,248 +1,189 @@
 <style>
-    @import url("https://fonts.googleapis.com/css?family=Open+Sans:400,700&display=swap");
-    *{
+@import url("https://fonts.googleapis.com/css?family=Open+Sans:400,700&display=swap");
+
+.home-products {
+    --first-color: #ffffff;
+    --accent-color: rgb(26, 83, 25);
+    width: 100%;
+    max-width: 1200px;
+    margin: 2.5rem auto 2rem;
+    padding: 0 1rem;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 1;
+    clear: both;
+    overflow: visible;
+}
+
+.home-products *,
+.home-products *::before,
+.home-products *::after {
+    box-sizing: border-box;
+}
+
+.home-products .title-shop {
+    position: relative;
+    margin: 0 0 1.75rem;
+    font-size: clamp(1.35rem, 2vw + 0.8rem, 1.85rem);
+    font-weight: bold;
+    text-align: center;
+    color: var(--accent-color);
+}
+
+.home-products-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.5rem;
+    width: 100%;
     margin: 0;
     padding: 0;
-    
 }
 
-    /*-- VARIABLES CSS--*/
-    /* Colors */
-    :root {
-        --first-color: white; /* Light green */
-        --second-color: rgb(128, 175, 129); /* Medium light green */
-        --third-color: rgb(80, 141, 78); /* Medium green */
-        --accent-color: rgb(26, 83, 25); /* Dark green */
-        --dark-color: #161616; /* Keeping the same dark color */
-    }
-
-    /* Typography responsive */
-    :root {
-        --body-font: "Open Sans";
-        --h1-font-size: 1.5rem;
-        --h3-font-size: 1rem;
-        --normal-font-size: 0.938rem;
-        --smaller-font-size: 0.75rem;
-    }
-    @media screen and (min-width: 768px) {
-        :root {
-            --h1-font-size: 1rem;
-            --normal-font-size: 1rem;
-            --smaller-font-size: 0.813rem;
-        }
-    }
-
-    /*-- BASE --*/
-    *, ::after, ::before {
-        box-sizing: border-box;
-    }
-   
-    h1 {
-        font-size: var(--h1-font-size);
-    }
-    img {
-        max-width: 100%;
-        height: auto;
-    }
-    a {
-        text-decoration: none;
-    }
-
-body{
-    background-color: white;
-}
-
-.bd-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    max-width: calc(100vw - 2rem); /* Ensures 1rem space on both sides */
-    gap: 2rem;
-    padding-left: 10vw; /* Padding on the left */
-    padding-right: 5vw; /* Adjusted right padding */
-}
-
-    /*-- PAGES --*/
-    .title-shop {
-        position: relative;
-        margin: 0 2rem;
-        font-size: 30px;
-        font-weight: bold;
-        margin-top: 50px;
-        margin-bottom: 50px;
-        text-align: center;
-        color: rgb(26, 83, 25); 
-    }
-    .title-shop::after {
-        content: "";
-        position: absolute;
-        top: 50%;
-        width: 72px;
-        height: 2px;
-        background-color: var(--accent-color);
-        margin-left: 0.25rem;
-    }
-
-   /*-- COMPONENT --*/
-.card {
+.home-product-card {
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 1rem 1.5rem; /* Reduced padding */
-    border-radius: 0.8rem; /* Slightly smaller border radius */
+    padding: 1rem 1.1rem 1.25rem;
+    border-radius: 0.8rem;
     overflow: hidden;
     background-color: var(--first-color);
-    transition: box-shadow 0.5s;
-    margin: 1.5rem 0.75rem; /* Reduced margin */
-    max-width: 280px; /* Set a max-width for smaller cards */
-}
-
-.card__img {
-    width: 100%; /* Keep image responsive */
-    height: auto;
-    padding: 0.8rem; /* Adjust padding for smaller image */
-    transition: transform 0.5s;
-    object-fit: cover; /* Ensure image covers area without stretching */
-    max-height: 220px; /* Set a smaller max height */
-}
-
-.card__name {
-    position: absolute;
-    left: -15%;
-    top: 0;
-    width: 2rem; /* Reduced width */
+    border: 1px solid rgba(26, 83, 25, 0.12);
+    box-shadow: 0 0 5px rgba(26, 83, 25, 0.25);
+    transition: box-shadow 0.3s ease, background-color 0.3s ease;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     height: 100%;
-    transform: rotate(180deg);
-    writing-mode: vertical-rl;
-    text-align: center;
-    background-color: var(--accent-color);
-    color: #fff;
-    font-weight: bold;
-    font-size: 16px; /* Reduced font size */
-    padding: 0.3rem; /* Adjusted padding */
-    transition: left 0.5s;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
+    margin: 0;
 }
 
-.card__precis {
+.home-product-card .card__img {
+    width: 100%;
+    max-height: 200px;
+    overflow: hidden;
+    border-radius: 0.5rem;
+}
+
+.home-product-card .card__img img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.35s ease;
+}
+
+.home-product-card .card__name {
+    display: none;
+}
+
+.home-product-card .card__title {
+    width: 100%;
+    margin: 0.85rem 0 0.35rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--accent-color);
+    text-align: center;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.home-product-card .card__precis {
     width: 100%;
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
-    margin-top: 4rem; /* Reduced margin for smaller layout */
+    align-items: center;
+    margin-top: 0.5rem;
 }
 
-.card__preci {
-    text-align: center;
-}
-
-.card__preci--before {
-    font-size: 16px; /* Smaller font */
-    color: rgb(26, 83, 25);
-    margin-bottom: 0.2rem;
-    text-decoration: line-through;
-}
-
-.card__preci--now {
-    font-size: 20px; /* Reduced font size */
+.home-product-card .card__preci--now {
+    font-size: 1.1rem;
     font-weight: bold;
-    color: rgb(26, 83, 25);
+    color: var(--accent-color);
 }
 
-.card_precise_stock {
-    margin-top: 10px;
+.home-product-card .card_precise_stock {
+    margin-top: 0.85rem;
+    width: 100%;
     text-align: center;
 }
 
-.card:hover {
-    background-color: rgb(214, 239, 216)
+.home-product-card:hover {
+    background-color: rgb(214, 239, 216);
 }
 
-.card:hover .card__name {
-    left: 0;
+.home-product-card:hover .card__img img {
+    transform: scale(1.06);
 }
 
-.card:hover .card__img {
-    transform: scale(1.5) translateY(10px); /* Adjusted hover effect */
-}
-
-.card:hover .card__precis {
-    transform: translateX(10px); /* Adjusted hover translation */
-}
-
-.card:hover .card_precise_stock {
-    transform: translateX(10px);
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .card {
-        padding: 0.75rem 1rem; /* Further reduce padding on smaller screens */
-        margin: 1rem 0.5rem;
-    }
-
-    .card__img {
-        max-height: 180px; /* Reduce image height on smaller screens */
-    }
-
-    .card__name {
-        width: 1.5rem;
-        font-size: 14px; /* Further reduce font size */
-    }
-
-    .card__preci--before {
-        font-size: 14px; /* Smaller font for prices */
-    }
-
-    .card__preci--now {
-        font-size: 18px; /* Reduced font size */
+@media (max-width: 1199.98px) {
+    .home-products-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1.25rem;
     }
 }
 
+@media (max-width: 991.98px) {
+    .home-products {
+        margin-top: 2rem;
+        padding: 0 1rem;
+    }
 
+    .home-products-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.15rem;
+    }
+}
 
+@media (max-width: 575.98px) {
+    .home-products {
+        margin-top: 1.5rem;
+        padding: 0 1rem;
+    }
+
+    .home-products-row {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1rem;
+        max-width: 100%;
+    }
+
+    .home-product-card {
+        padding: 0.85rem 0.9rem 1.1rem;
+    }
+
+    .home-product-card .card__img img {
+        height: 180px;
+    }
+}
 </style>
 
-
-<main class="main bd-grid">
-    <div class="row g-4">
+<section class="home-products">
+    <h2 class="title-shop">Featured Products</h2>
+    <div class="home-products-row">
         <% products.slice(0, 10).forEach(product => { %>
-            <article class="card col-md-3 d-flex align-items-stretch">
+            <article class="home-product-card">
                 <div class="card__img">
-                    <img src="<%='/uploads/' +  product.imgArray[0] %>" alt="<%= product.name %>" class="card-img-top">
+                    <img src="<%='/uploads/' + product.imgArray[0] %>" alt="<%= product.name %>">
                 </div>
-                <div class="card__name">
-                    <p><%= product.name %></p>
+                <h3 class="card__title"><%= product.name %></h3>
+                <div class="card__precis">
+                    <span class="card__preci--now">$<%= product.finalPrice %></span>
+                    <form class="wishlist-form" data-id="<%= product._id %>" style="display: inline; margin: 0;">
+                        <button type="button" class="btn btn-link wishlist-btn" style="padding: 0; background: none; border: none;" aria-label="Add to wishlist">
+                            <i class="fas fa-heart" style="color: red;"></i>
+                        </button>
+                    </form>
                 </div>
-                <div class="card__precis d-flex align-items-center justify-content-between">
-                    <!-- Price Section -->
-                    <% if (product.discount > 0) { %>
-                        <span class="card__preci card__preci--now">$<%= product.finalPrice %></span>
-                    <% } else { %>
-                        <span class="card__preci card__preci--now">$<%= product.finalPrice %></span>
-                    <% } %>
-                    <!-- Wishlist Love Sign -->
-                    <span>
-                        <form class="wishlist-form" data-id="<%= product._id %>" style="display: inline;">
-                            <button type="button" class="btn btn-link wishlist-btn" style="padding: 0; background: none; border: none;">
-                                <i class="fas fa-heart" style="color: red;"></i>
-                            </button>
-                        </form>
-                    </span>
-                </div>
-                <!-- Stock and Detailed View -->
                 <div class="card_precise_stock">
                     <% if (product.stock > 0) { %>
-                        <a href="/product/<%= product._id %>" class="btn btn-outline-success" style="background-color: rgb(26, 83, 25);;color: white;">
+                        <a href="/product/<%= product._id %>" class="btn btn-outline-success" style="background-color: rgb(26, 83, 25); color: white;">
                             Detailed View
                         </a>
                     <% } else { %>
-                       
-                        <a href="#" class="btn btn-outline-danger" style="background-color:red;color: white;" onclick="return false;">
+                        <a href="#" class="btn btn-outline-danger" style="background-color: red; color: white;" onclick="return false;">
                             Out of Stock
                         </a>
                     <% } %>
@@ -250,55 +191,33 @@ body{
             </article>
         <% }) %>
     </div>
-</main>
-<
-<script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
-<script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+</section>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const wishlistForms = document.querySelectorAll('.wishlist-form');
-    
-        wishlistForms.forEach(form => {
+        document.querySelectorAll('.home-products .wishlist-form').forEach(form => {
             form.querySelector('.wishlist-btn').addEventListener('click', function () {
                 const productId = form.getAttribute('data-id');
-    
-                // Perform an AJAX POST request to add the product to the wishlist
+
                 fetch(`/add-wishlist/${productId}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ productId })
                 })
                 .then(response => response.json())
                 .then(data => {
-                    if (data.success) {
-                        // Display success toast notification
-                        Swal.fire({
-                            toast: true,
-                            icon: 'success',
-                            title: 'Product added to wishlist!',
-                            position: 'top-end',
-                            showConfirmButton: false,
-                            timer: 3000,
-                            timerProgressBar: true,
-                        });
-                    } else {
-                        // Display error toast notification if something goes wrong
-                        Swal.fire({
-                            toast: true,
-                            icon: 'error',
-                            title: 'Failed to add product to wishlist!',
-                            position: 'top-end',
-                            showConfirmButton: false,
-                            timer: 3000,
-                            timerProgressBar: true,
-                        });
-                    }
+                    Swal.fire({
+                        toast: true,
+                        icon: data.success ? 'success' : 'error',
+                        title: data.success ? 'Product added to wishlist!' : 'Failed to add product to wishlist!',
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true,
+                    });
                 })
-                .catch(error => {
-                    console.error('Error adding to wishlist:', error);
+                .catch(() => {
                     Swal.fire({
                         toast: true,
                         icon: 'error',
@@ -312,4 +231,4 @@ body{
             });
         });
     });
-    </script>
+</script>

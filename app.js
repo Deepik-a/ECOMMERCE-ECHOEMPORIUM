@@ -48,15 +48,20 @@ app.use('/uploads', express.static('uploads'));
 
 
 //--------------------------- session handling -----------------------
+app.set('trust proxy', 1); // needed on Render / HTTPS proxies
 app.use(session({
-    secret: 'your-secret-key',
+    secret: process.env.SESSION_SECRET || 'your-secret-key-echo-emporium-admin-persistent',
     resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false } 
-  }));
+    saveUninitialized: false,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        maxAge: 1000 * 60 * 60 * 24 * 30 // 30 days persistent session
+    }
+}));
 
-  app.use(passport.initialize());
-  app.use(passport.session());
+app.use(passport.initialize());
+app.use(passport.session());
   
 
 // Flash setup
@@ -75,11 +80,28 @@ app.use('/admin',adminRoutes)
 app.get('*',(req,res) =>{
   res.render('user/404')
 })
-// app.get('/',(req,res)=>{
-//   res.render("user/hloo")
-// })
 
-
+// Global Error Handling Middleware
+app.use((err, req, res, next) => {
+  console.error('Global Error Handler:', err);
+  if (err && (err.name === 'MulterError' || err.code === 'LIMIT_FILE_SIZE')) {
+    const message = err.code === 'LIMIT_FILE_SIZE'
+      ? 'File too large! Maximum image size allowed is 5MB.'
+      : (err.message || 'File upload error.');
+    if (req.xhr || req.headers.accept?.includes('application/json') || req.is('multipart/form-data')) {
+      return res.status(400).json({ success: false, message });
+    }
+    req.flash('error', message);
+    return res.status(400).redirect('back');
+  }
+  if (req.xhr || req.headers.accept?.includes('application/json')) {
+    return res.status(err.status || 500).json({
+      success: false,
+      message: err.message || 'Internal Server Error'
+    });
+  }
+  res.status(err.status || 500).render('user/404');
+});
 
 app.listen(port,()=>{
 console.log(`http://localhost:${port}`);

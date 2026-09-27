@@ -1,53 +1,84 @@
 <style>
-    /* Background color for the entire navbar */
 .custom-navbar {
-    background-color: rgb(214, 239, 216); /* Light green shade for the background */
-    padding: 10px;
-    height:40px;
+    background-color: rgb(214, 239, 216);
+    padding: 0.35rem 0.75rem;
     border-top: 1px solid #333;
+    position: relative;
+    z-index: 1020;
 }
 
-/* Style for individual nav links (dark green) */
-.custom-navbar .navbar-nav .nav-link {
-    color: #2f6b2e; /* White text */
-    
-   /* Dark green for the nav links */
-    padding: 10px 20px;
-    border-radius: 5px;
-    margin-right: 5px;
-    transition: background-color 0.3s ease-in-out;
-    height:40px;
-}
-
-/* Hover effect for nav links */
-.custom-navbar .navbar-nav .nav-link:hover {
-    background-color: #4b8f4a; /* Slightly brighter green on hover */
-    color: #fff; /* Keep text white on hover */
-}
-
-/* Navbar brand for mobile view */
-.navbar-brand {
-    color: #ffffff; /* White text for Echo Emporium */
+.custom-navbar .navbar-brand {
+    color: #1A5319;
     font-weight: bold;
-    height:40px;
+    font-size: 1rem;
+    margin-right: 0;
 }
 
+.custom-navbar .navbar-toggler {
+    border: 1px solid rgba(26, 83, 25, 0.35);
+    padding: 0.25rem 0.5rem;
+}
+
+.custom-navbar .navbar-toggler:focus {
+    box-shadow: 0 0 0 0.15rem rgba(26, 83, 25, 0.2);
+}
+
+.custom-navbar .navbar-toggler-icon {
+    width: 1.25em;
+    height: 1.25em;
+}
+
+.custom-navbar .navbar-nav .nav-link {
+    color: #2f6b2e;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    margin: 0 0.15rem;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    white-space: nowrap;
+}
+
+.custom-navbar .navbar-nav .nav-link:hover,
+.custom-navbar .navbar-nav .nav-link:focus {
+    background-color: #4b8f4a;
+    color: #fff;
+}
+
+@media (max-width: 991.98px) {
+    .custom-navbar {
+        padding: 0.45rem 0.75rem;
+    }
+
+    /* Solid panel so menu never sits transparently over the hero */
+    .custom-navbar .navbar-collapse {
+        background-color: rgb(214, 239, 216);
+        border: 1px solid rgba(26, 83, 25, 0.15);
+        border-radius: 0 0 10px 10px;
+        margin: 0.5rem -0.75rem -0.35rem;
+        padding: 0.5rem 0.75rem 0.75rem;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+        position: relative;
+        z-index: 1025;
+    }
+
+    .custom-navbar .navbar-nav .nav-link {
+        margin: 0.2rem 0;
+        white-space: normal;
+        padding: 0.65rem 0.85rem;
+    }
+}
 </style>
+
 <nav class="navbar navbar-expand-lg custom-navbar">
-    <div class="container-fluid">
-        <a class="navbar-brand d-block d-sm-block d-md-none d-lg-none" href="#">
-           Echo Emporium
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <div class="container-fluid px-0 px-sm-2">
+        <a class="navbar-brand d-lg-none" href="/">Echo Emporium</a>
+        <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <div class="collapse navbar-collapse justify-content-lg-center" id="navbarSupportedContent">
+            <ul class="navbar-nav mb-2 mb-lg-0 flex-lg-wrap justify-content-lg-center">
                 <li class="nav-item">
                     <a class="nav-link" href="/">Home</a>
                 </li>
-
-                <!-- Categories List -->
                 <li class="nav-item">
                     <a class="nav-link" href="/all-products">All Products</a>
                 </li>

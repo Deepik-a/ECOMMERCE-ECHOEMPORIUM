@@ -123,34 +123,74 @@
 
 /*** Navbar ***/
 .sidebar .navbar .navbar-nav .nav-link {
-    padding: 7px 20px;
-    color: var(--dark);
+    padding: 8px 18px;
+    color: #1e293b !important;
     font-weight: 500;
-    border-left: 3px solid var(--light);
+    border-left: 3px solid transparent;
     border-radius: 0 30px 30px 0;
     outline: none;
+    transition: all 0.2s ease-in-out;
+    white-space: nowrap;
+    overflow: visible;
+    display: flex;
+    align-items: center;
 }
 
 .sidebar .navbar .navbar-nav .nav-link:hover,
 .sidebar .navbar .navbar-nav .nav-link.active {
-    color: var(--primary);
-    background: #FFFFFF;
-    border-color: var(--primary);
+    color: #009CFF !important;
+    background: #eaf6ff !important;
+    border-left-color: #009CFF !important;
 }
 
-.sidebar .navbar .navbar-nav .nav-link i {
-    width: 40px;
-    height: 40px;
+/* Collapsed sub-menu items */
+.sidebar .navbar .navbar-nav .collapse .sub-link {
+    padding: 8px 14px 8px 24px;
+    color: #475569 !important;
+    font-weight: 500;
+    font-size: 0.875rem;
+    border-left: 3px solid transparent;
+    border-radius: 0 20px 20px 0;
+    background: transparent;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+}
+
+.sidebar .navbar .navbar-nav .collapse .sub-link:hover {
+    color: #009CFF !important;
+    background: #e0f2fe !important;
+    border-left-color: #009CFF !important;
+}
+
+.sidebar .navbar .navbar-nav .collapse .sub-link.active {
+    color: #009CFF !important;
+    background: #dbeafe !important;
+    border-left-color: #009CFF !important;
+    font-weight: 600;
+}
+
+.sidebar .navbar .navbar-nav .nav-link i,
+.sidebar .navbar .navbar-nav .collapse .sub-link i {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: #FFFFFF;
-    border-radius: 40px;
+    background: #f1f5f9;
+    border-radius: 50%;
+    color: #475569;
+    margin-right: 10px;
+    transition: all 0.2s ease;
 }
 
 .sidebar .navbar .navbar-nav .nav-link:hover i,
-.sidebar .navbar .navbar-nav .nav-link.active i {
-    background: var(--light);
+.sidebar .navbar .navbar-nav .nav-link.active i,
+.sidebar .navbar .navbar-nav .collapse .sub-link:hover i,
+.sidebar .navbar .navbar-nav .collapse .sub-link.active i {
+    background: #009CFF;
+    color: #ffffff;
 }
 
 .sidebar .navbar .dropdown-toggle::after {

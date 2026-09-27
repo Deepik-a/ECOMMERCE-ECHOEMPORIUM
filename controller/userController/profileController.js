@@ -5,23 +5,25 @@ const addressSchema = require("../../model/addressSchema");
 
 const profile = async (req, res) => {
   try {
-    console.log("profile login through google auth:", req.session.user); // Debugging session
-  
+    console.log("profile session user:", req.session.user);
 
-    const userId = req.session.user;
-    const userDetail = await userSchema.findById(userId);
-    const index = req.params.index; 
-
-    if (!userId) {
+    if (!req.session.user) {
       return res.redirect("/login");
     }
+
+    // session.user may be the full user object (from loginpost) or just an _id (from Google OAuth)
+    const userId = req.session.user._id || req.session.user;
+
+    const userDetail = await userSchema.findById(userId);
+
     if (!userDetail) {
-      return res.redirect("/");
+      return res.redirect("/login");
     }
-    res.render("user/userprofile", { userDetail ,index });
+
+    res.render("user/userprofile", { userDetail });
   } catch (error) {
-    console.log(`Error during profile page render ${error}`);
-    res.status(404);
+    console.log(`Error during profile page render: ${error}`);
+    res.status(500).send("Server Error");
   }
 };
 
@@ -30,7 +32,8 @@ const profile = async (req, res) => {
 // Backend check for Google-authenticated users (already included)
 const updatedProfile = async (req, res) => {
   try {
-    const userDetail = await userSchema.findById(req.session.user);
+    const userId = req.session.user._id || req.session.user;
+    const userDetail = await userSchema.findById(userId);
     
     // Check if the user is logged in via Google
     if (userDetail.authMethod === 'google') {
@@ -40,7 +43,7 @@ const updatedProfile = async (req, res) => {
     const { name, phone } = req.body;
     
     // Update the profile if not a Google-authenticated user
-    const profileUpdate = await userSchema.findByIdAndUpdate(req.session.user, { name, phone });
+    const profileUpdate = await userSchema.findByIdAndUpdate(userId, { name, phone });
     
     if (profileUpdate) {
       res.redirect(`/userprofile?status=success&message=Profile updated successfully`);
@@ -70,17 +73,17 @@ const addAddress = async (req, res) => {
       country: req.body.country,
     };
 
-    const user = await userSchema.findById(req.session.user);
+    const userId = req.session.user._id || req.session.user;
+    const user = await userSchema.findById(userId);
     user.address.push(userAddress);
     await user.save();
 
     console.log("success", "Address added");
-
     res.redirect("/userprofile");
   } catch (error) {
     req.flash("error", "Error while adding new address, please try later");
     console.log(`Error during adding the user address: ${error}`);
-    res.redirect("/userprofile"); // Redirect to handle error
+    res.redirect("/userprofile");
   }
 };
 
@@ -88,7 +91,7 @@ const addAddress = async (req, res) => {
 
 const removeAddress = async (req, res) => {
   try {
-    const userId = req.session.user;
+    const userId = req.session.user._id || req.session.user;
     const index = parseInt(req.params.index, 10);
 
     const user = await userSchema.findById(userId);
@@ -104,13 +107,11 @@ const removeAddress = async (req, res) => {
       return res.redirect("/userprofile");
     }
 
-    user.address.splice(index, 1); // Remove the address
+    user.address.splice(index, 1);
     await user.save();
 
     console.log("Address deleted successfully");
     req.flash("success", "Address deleted successfully");
-
-    // Redirect to the profile page after successful deletion
     res.redirect("/userprofile");
   } catch (error) {
     console.log(`Error during address deletion: ${error}`);
@@ -124,17 +125,16 @@ const removeAddress = async (req, res) => {
 
 const editAddress = async (req, res) => {
   try {
-    const index = parseInt(req.params.index, 10); // Get the index from the URL parameter
-    console.log(index,"index of address");
-    const user = await userSchema.findById(req.session.user); // Fetch the user from the database
+    const index = parseInt(req.params.index, 10);
+    console.log(index, "index of address");
+    const userId = req.session.user._id || req.session.user;
+    const user = await userSchema.findById(userId);
 
-    // Ensure the index is valid
     if (index < 0 || index >= user.address.length) {
       req.flash("error", "Invalid address index.");
-      return res.redirect("/userprofile"); // Redirect to user profile if index is invalid
+      return res.redirect("/userprofile");
     }
 
-    // Get the updated address details from the request body
     const updatedAddress = {
       building: req.body.building,
       street: req.body.street,
@@ -146,18 +146,15 @@ const editAddress = async (req, res) => {
       country: req.body.country,
     };
 
-    // Update the specified address in the user's address array
     user.address[index] = updatedAddress;
-
-    // Save the user with the updated address
     await user.save();
 
     req.flash("success", "Address updated successfully.");
-    res.redirect("/userprofile"); // Redirect to user profile after successful update
+    res.redirect("/userprofile");
   } catch (error) {
     req.flash("error", "Error while updating the address. Please try again later.");
     console.log(`Error during updating the user address: ${error}`);
-    res.redirect("/userprofile"); // Redirect to user profile on error
+    res.redirect("/userprofile");
   }
 };
 

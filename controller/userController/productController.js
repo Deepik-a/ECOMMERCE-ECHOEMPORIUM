@@ -107,81 +107,98 @@ const imageZoom= async (req, res) => {
 
 
 
-// Controller to fetch all products
+// Controller to fetch all products (handles ?sort= and ?category= query params)
 const getAllProducts = async (req, res) => {
     try {
-        console.log("getAllProducts")
-        const products = await productSchema.find({ isActive: true}); // Fetch all products from the database
+        console.log("getAllProducts");
         const categories = await categorySchema.find({ isDeleted: false });
-        console.log("products",products)
-        console.log("products.imgarray",products.imgArray)
-        res.render('user/AllProduct', { products,categories }); 
+
+        // Build query – always filter active products
+        let query = { isActive: true };
+
+        // Category filter
+        if (req.query.category) {
+            const cat = await categorySchema.findOne({ name: req.query.category, isDeleted: false });
+            if (cat) {
+                query.category = cat._id;
+            }
+        }
+
+        // Sort option
+        let sortOption = {};
+        switch (req.query.sort) {
+            case 'price_low_high':
+                sortOption = { finalPrice: 1 };
+                break;
+            case 'price_high_low':
+                sortOption = { finalPrice: -1 };
+                break;
+            case 'new_arrivals':
+                sortOption = { createdAt: -1 };
+                break;
+            case 'az':
+                sortOption = { name: 1 };
+                break;
+            case 'za':
+                sortOption = { name: -1 };
+                break;
+            default:
+                sortOption = { createdAt: -1 }; // default: newest first
+        }
+
+        const products = await productSchema.find(query).sort(sortOption);
+
+        const message = products.length === 0 ? 'No products found.' : '';
+
+        res.render('user/AllProduct', {
+            products,
+            categories,
+            message,
+            currentSort: req.query.sort || '',
+            currentCategory: req.query.category || ''
+        });
     } catch (error) {
         console.log('Error fetching products: ', error);
         res.status(500).send('Error fetching products');
     }
 };
 
-const sortAllproducts= async (req, res) => {
-    console.log("sortAllProducts")
-    const categories = await categorySchema.find({ isDeleted: false });
-    let sortOption = {};
-
-    switch (req.query.sort) {
-        // case 'popularity':
-        //     sortOption = { popularity: -1 }; // Assuming you have a 'popularity' field in your products
-        //     break;
-        case 'price_low_high':
-            sortOption = { price: 1 }; // Sort by price ascending
-            break;
-        case 'price_high_low':
-            sortOption = { price: -1 }; // Sort by price descending
-            break;
-       // case 'ratings':
-          //  sortOption = { averageRating: -1 }; // Sort by ratings descending
-          //  break;
-       // case 'featured':
-           // sortOption = { featured: -1 }; // Assuming you have a 'featured' field
-           // break;
-        case 'new_arrivals':
-            sortOption = { createdAt: -1 }; // Assuming 'createdAt' field stores product creation date
-            break;
-        case 'az':
-            sortOption = { name: 1 }; // Sort alphabetically A-Z
-            break;
-        case 'za':
-            sortOption = { name: -1 }; // Sort alphabetically Z-A
-            break;
-        default:
-            sortOption = {}; // Default sort, no sorting
-    }
-
-    const products = await productSchema.find().sort(sortOption);
-    res.render('user/AllProduct', { products,categories});
+// Keep /products route working – delegates to getAllProducts logic
+const sortAllproducts = async (req, res) => {
+    return getAllProducts(req, res);
 };
 
 
-const searchbyProducts= async (req, res) => {
-   
-        const searchQuery = req.body.search;
-    const categories = await categorySchema.find({ isDeleted: false });
+const searchbyProducts = async (req, res) => {
+    try {
+        const searchQuery = req.body.search || '';
+        const categories = await categorySchema.find({ isDeleted: false });
 
-    
-        // Perform a database search for products
+        // Perform a database search for active products only
         const products = await productSchema.find({
-            name: { $regex: searchQuery, $options: 'i' } // Case-insensitive search
+            name: { $regex: searchQuery, $options: 'i' }, // Case-insensitive search
+            isActive: true
         });
-    
+
         // If no products found, show "no results" message
-        const message = products.length === 0 ? 'Sorry, no results found! Please check the spelling or try searching for something else.' : '';
-    
+        const message = products.length === 0
+            ? 'Sorry, no results found! Please check the spelling or try searching for something else.'
+            : '';
+
         // Render the all-products page with the search results
+        // Pass currentSort and currentCategory so the template doesn't crash
         res.render('user/Allproduct', {
-            products: products,
-            message: message,
-            categories// Assuming you are fetching categories too
+            products,
+            message,
+            categories,
+            currentSort: '',
+            currentCategory: ''
         });
-    };
+    } catch (error) {
+        console.error('Error searching products:', error);
+        res.status(500).send('Server Error');
+    }
+};
     
 
 

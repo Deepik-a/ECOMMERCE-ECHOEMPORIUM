@@ -44,14 +44,11 @@
         margin-top: 100px;
     }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Bootstrap loaded once at bottom of page -->
 
 
  <!-- Show No Results Message if there are no products -->
- <% if (products.length === 0 && message) { %>
+ <% if (products.length === 0 && message && message.length > 0) { %>
     <p class="no-results-message"  style="color:rgb(26, 83, 25);"><%= message %></p>
 
     <% } else { %>
@@ -59,17 +56,19 @@
 <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
 
-        <!-- Filter Button -->
-        <button class="btn dropdown-toggle" id="filterButton" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Filter
-        </button>
-
-        <!-- Dropdown Menu for Categories -->
-        <ul id="categoryList" class="dropdown-menu" aria-labelledby="filterButton">
-            <% categories.forEach(category => { %>
-                <li><a class="dropdown-item" href="/categories/<%= category.name %>"><%= category.name %></a></li>
-            <% }) %>
-        </ul>
+        <!-- Filter Button (must be inside div.dropdown for Bootstrap 5) -->
+        <div class="dropdown">
+            <button class="btn dropdown-toggle" id="filterButton" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Filter
+            </button>
+            <!-- Dropdown Menu for Categories -->
+            <ul id="categoryList" class="dropdown-menu" aria-labelledby="filterButton">
+                <li><a class="dropdown-item <%= currentCategory === '' ? 'fw-bold' : '' %>" href="/all-products?sort=<%= currentSort %>">All Categories</a></li>
+                <% categories.forEach(category => { %>
+                    <li><a class="dropdown-item <%= currentCategory === category.name ? 'fw-bold' : '' %>" href="/all-products?category=<%= encodeURIComponent(category.name) %>&sort=<%= currentSort %>"><%= category.name %></a></li>
+                <% }) %>
+            </ul>
+        </div>
 
         <!-- Sort Dropdown -->
         <div class="dropdown">
@@ -77,14 +76,11 @@
                 Sort By
             </button>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="sortDropdown">
-                <!-- <li><a class="dropdown-item" href="/products?sort=popularity">Popularity</a></li> -->
-                <li><a class="dropdown-item" href="/products?sort=price_low_high">Price: Low to High</a></li>
-                <li><a class="dropdown-item" href="/products?sort=price_high_low">Price: High to Low</a></li>
-                <!-- <li><a class="dropdown-item" href="/products?sort=ratings">Average Ratings</a></li> -->
-                <!-- <li><a class="dropdown-item" href="/products?sort=featured">Featured</a></li> -->
-                <li><a class="dropdown-item" href="/products?sort=new_arrivals">New Arrivals</a></li>
-                <li><a class="dropdown-item" href="/products?sort=az">A - Z</a></li>
-                <li><a class="dropdown-item" href="/products?sort=za">Z - A</a></li>
+                <li><a class="dropdown-item <%= currentSort === 'new_arrivals' ? 'fw-bold' : '' %>" href="/all-products?sort=new_arrivals&category=<%= encodeURIComponent(currentCategory) %>">New Arrivals</a></li>
+                <li><a class="dropdown-item <%= currentSort === 'price_low_high' ? 'fw-bold' : '' %>" href="/all-products?sort=price_low_high&category=<%= encodeURIComponent(currentCategory) %>">Price: Low to High</a></li>
+                <li><a class="dropdown-item <%= currentSort === 'price_high_low' ? 'fw-bold' : '' %>" href="/all-products?sort=price_high_low&category=<%= encodeURIComponent(currentCategory) %>">Price: High to Low</a></li>
+                <li><a class="dropdown-item <%= currentSort === 'az' ? 'fw-bold' : '' %>" href="/all-products?sort=az&category=<%= encodeURIComponent(currentCategory) %>">A - Z</a></li>
+                <li><a class="dropdown-item <%= currentSort === 'za' ? 'fw-bold' : '' %>" href="/all-products?sort=za&category=<%= encodeURIComponent(currentCategory) %>">Z - A</a></li>
             </ul>
         </div>
 
@@ -193,7 +189,6 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Display success toast notification
                         Swal.fire({
                             toast: true,
                             icon: 'success',
@@ -203,12 +198,21 @@
                             timer: 3000,
                             timerProgressBar: true,
                         });
+                    } else if (data.message === 'Product already in wishlist') {
+                        Swal.fire({
+                            toast: true,
+                            icon: 'info',
+                            title: 'Already in your wishlist!',
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                        });
                     } else {
-                        // Display error toast notification if something goes wrong
                         Swal.fire({
                             toast: true,
                             icon: 'error',
-                            title: 'Failed to add product to wishlist!',
+                            title: data.message || 'Failed to add product to wishlist!',
                             position: 'top-end',
                             showConfirmButton: false,
                             timer: 3000,

@@ -1,196 +1,89 @@
-<link href="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .btn-primary {
-            background-color: #009CFF;
-            border-color: #009CFF;
-        }
-        .btn-primary:hover {
-            background-color: #007BFF;
-            border-color: #007BFF;
-        }
-    </style>
-</head>
-<body>
-    <!-- Sidebar Start -->
-<div class="container-fluid pt-4 px-4">
-    <div class="row">
-      <!-- Sidebar -->
-      <div class="col-md-3">
-        <div class="sidebar pe-4 pb-3 bg-light">
-          <nav class="navbar navbar-light">
-            <a href="index.html" class="navbar-brand mx-4 mb-3">
-              <h3 class="text-primary">
-                <i class="fa fa-hashtag me-2"></i>Dashboard
-              </h3>
-            </a>
-            <div class="d-flex align-items-center ms-4 mb-4">
-              <div class="position-relative">
-                <div class="bg-success rounded-circle border border-2 border-white position-absolute end-0 bottom-0 p-1"></div>
-              </div>
-              <div class="ms-3">
-                <h6 class="mb-0">DEEPIKA PS</h6>
-                <span>Admin</span>
-              </div>
-            </div>
-            <div class="navbar-nav w-100">
-              <a href="index.html" class="nav-item nav-link active">
-                <i class="fa fa-tachometer-alt me-2"></i>Dashboard
-              </a>
-              <div class="nav-item">
-                <a href="#" class="nav-link dropdown-toggle">
-                  <i class="fa fa-laptop me-2"></i>Sales Report
-                </a>
-              </div>
-  
-              <!-- Category Section with Toggle -->
-              <div class="nav-item">
-                <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#CategoryMenu" id="categoryMenuLink">
-                  <i class="fa fa-keyboard me-2"></i>Category
-                </a>
-                <div id="CategoryMenu" class="collapse">
-                  <ul class="navbar-nav ps-3">
-                    <li class="nav-item">
-                      <a href="/admin/addCategory" class="nav-link">
-                        <i class="fa fa-plus me-2"></i>Add Category
-                      </a>
-                    </li>
-                    <li class="nav-item">
-                      <a href="/admin/editCategory" class="nav-link">
-                        <i class="fa fa-list me-2"></i>Category List
-                      </a>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-              <div class="nav-item">
-                <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#productMenu" id="productMenuLink">
-                    <i class="fa fa-keyboard me-2"></i>Products
-                </a>
-                <div id="productMenu" class="collapse">
-                    <ul class="navbar-nav ps-3">
-                        <li class="nav-item">
-                            <a href="/admin/addProduct" class="nav-link">
-                                <i class="fa fa-plus me-2"></i>Add Product
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/admin/editProduct" class="nav-link">
-                                <i class="fa fa-list me-2"></i>Product List
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-                </div>
-  
-              <a href="/admin/users" class="nav-item nav-link">
-                <i class="fa fa-table me-2"></i>Customers
-              </a>
-              <a href="/admin/coupons" class="nav-item nav-link">
-                <i class="fa fa-chart-bar me-2"></i>Coupons
-              </a>
-              <a href="/admin/orders" class="nav-item nav-link">
-                <i class="fa fa-chart-bar me-2"></i>Orders
-              </a>
-              <a href="chart.html" class="nav-item nav-link">
-                <i class="fa fa-chart-bar me-2"></i>Popups
-              </a>
-              <a href="logout" class="nav-item nav-link">
-                <i class="fa fa-sign-out-alt me-2"></i>Logout
-              </a>
-            </div>
-          </nav>
+<%- include('sidebar') %>
+
+<div class="container-fluid pt-4 px-4 pb-5">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h4 class="fw-bold text-dark mb-0">Customer Management</h4>
+            <p class="text-muted small mb-0">Manage customer accounts, status, and permissions</p>
         </div>
-      </div>
+        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2">
+            Total Users: <%= users.length %>
+        </span>
+    </div>
 
-
-      <!-- Content Start -->
-<div class="content">
-  
-    <!-- Navbar Start -->
-    <nav class="navbar navbar-expand bg-light navbar-light sticky-top px-4 py-0">
-        <a href="index.html" class="navbar-brand d-flex d-lg-none me-4">
-            <h2 class="text-primary mb-0"><i class="fa fa-hashtag"></i></h2>
-        </a>
-        <a href="#" class="sidebar-toggler flex-shrink-0">
-            <i class="fa fa-bars"></i>
-        </a>
-        
-        <div class="navbar-nav align-items-center ms-auto">
-           
-        
-        
-            <div class="nav-item dropdown">
-                <a href="#" class="nav-link">
-                
-                    <span class="d-none d-lg-inline-flex">Deepika </span>
-                </a>
-                <div class="dropdown-menu dropdown-menu-end bg-light border-0 rounded-0 rounded-bottom m-0">
-                    <a href="#" class="dropdown-item">My Profile</a>
-                    <!-- <a href="#" class="dropdown-item">Settings</a> -->
-                    <a href="#" class="dropdown-item">Log Out</a>
-                </div>
+    <div class="card border-0 shadow-sm rounded-3 bg-white">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light text-muted small text-uppercase">
+                        <tr>
+                            <th class="ps-4" scope="col">#</th>
+                            <th scope="col">Customer Name</th>
+                            <th scope="col">Email Address</th>
+                            <th scope="col">Status</th>
+                            <th class="pe-4 text-end" scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (users && users.length > 0) { %>
+                            <% users.forEach((user, index) => { %>
+                                <tr>
+                                    <th class="ps-4 fw-normal text-muted" scope="row"><%= index + 1 %></th>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px;">
+                                                <%= (user.name || 'U').charAt(0).toUpperCase() %>
+                                            </div>
+                                            <span class="fw-semibold text-dark"><%= user.name %></span>
+                                        </div>
+                                    </td>
+                                    <td class="text-muted"><%= user.email %></td>
+                                    <td>
+                                        <% if (user.isBlocked) { %>
+                                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1">Blocked</span>
+                                        <% } else { %>
+                                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">Active</span>
+                                        <% } %>
+                                    </td>
+                                    <td class="pe-4 text-end">
+                                        <% if (user.isBlocked) { %>
+                                            <button class="btn btn-outline-success btn-sm" onclick="confirmUnblock('<%= user._id %>')">
+                                                <i class="fa fa-unlock me-1"></i> Unblock
+                                            </button>
+                                        <% } else { %>
+                                            <button class="btn btn-outline-danger btn-sm" onclick="confirmBlock('<%= user._id %>')">
+                                                <i class="fa fa-ban me-1"></i> Block
+                                            </button>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">No customers registered yet.</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
             </div>
         </div>
-    </nav>
-
-<!-- Navbar End -->
-<div class="container-fluid pt-4 px-4">
-  <div class="bg-light text-center rounded p-4">
-      <h4 class="mb-4">User Management</h4>
-      <table class="table table-bordered">
-          <thead class="table-primary">
-              <tr>
-                  <th scope="col">#</th>
-                  <th scope="col">User Name</th>
-                  <th scope="col">Email</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Actions</th>
-              </tr>
-          </thead>
-          <tbody>
-              <% users.forEach((user, index) => { %>
-                  <tr>
-                      <th scope="row"><%= index + 1 %></th>
-                      <td><%= user.name %></td>
-                      <td><%= user.email %></td>
-                      <td>
-                          <% if (user.isBlocked) { %>
-                              <span class="badge bg-danger">Blocked</span>
-                          <% } else { %>
-                              <span class="badge bg-success">Active</span>
-                          <% } %>
-                      </td>
-                      <td>
-                          <% if (user.isBlocked) { %>
-                              <a href="#" class="btn btn-primary btn-sm" onclick="confirmUnblock('<%= user._id %>')">Unblock</a>
-                          <% } else { %>
-                              <a href="#" class="btn btn-primary btn-sm" onclick="confirmBlock('<%= user._id %>')">Block</a>
-                          <% } %>
-                      </td>
-                  </tr>
-              <% }) %>
-          </tbody>
-      </table>
-  </div>
+    </div>
 </div>
 
-<!-- SweetAlert CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <!-- SweetAlert JS -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 function confirmBlock(userId) {
   Swal.fire({
-      title: 'Are you sure?',
-      text: "You want to block this user!",
+      title: 'Block User?',
+      text: "This user will not be able to log in or place orders.",
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Yes, block it!'
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, Block User'
   }).then((result) => {
       if (result.isConfirmed) {
-          // Redirect to the block URL if confirmed
           window.location.href = '/admin/block/' + userId;
       }
   });
@@ -198,21 +91,17 @@ function confirmBlock(userId) {
 
 function confirmUnblock(userId) {
   Swal.fire({
-      title: 'Are you sure?',
-      text: "You want to unblock this user!",
-      icon: 'warning',
+      title: 'Unblock User?',
+      text: "This user will regain full access to their account.",
+      icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#28a745', // Green color for unblock
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, unblock it!'
+      confirmButtonColor: '#28a745',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, Unblock User'
   }).then((result) => {
       if (result.isConfirmed) {
-          // Redirect to the unblock URL if confirmed
           window.location.href = '/admin/unblock/' + userId;
       }
   });
 }
 </script>
-
-
-    

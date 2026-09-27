@@ -53,59 +53,37 @@ route.get('/logout',checkUser,userController.logout)
 //------------------------ login using google ------------------------
 
 
-// route.get('/auth/google/callback',userController.googleAuthCallback);
-route.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+route.get('/auth/google', passport.authenticate('google', {
+  scope: ['profile', 'email'],
+  prompt: 'select_account',
+}));
 
-// Google OAuth callback route
-
-const MongoServerError = require('mongodb').MongoServerError;
-route.get('/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/' }),
-  async (req, res) => {
+// Google OAuth callback — custom handler so TokenError/invalid_grant
+// redirects to login instead of crashing into the global error handler
+route.get('/auth/google/callback', (req, res, next) => {
+  passport.authenticate('google', async (err, user, info) => {
     try {
-      const categories = await categorySchema.find({ isDeleted: false });
-      const products = await productSchema.find({ isActive: true });
-
-      // Attempt to find an existing user by email
-      let user = await User.findOne({ email: req.user.email });
-
+      if (err) {
+        console.error('Google OAuth error:', err.code || err.message || err);
+        return res.redirect('/login?error=googleAuthFailed');
+      }
       if (!user) {
-        // If user doesn't exist, create a new user
-        try {
-          user = await User.create({
-            email: req.user.email,
-            name: req.user.name,  // Assuming `name` is part of the Google profile
-          });
-        } catch (err) {
-        
-          // Handle duplicate key error
-          if ( err.code === E11000) {
-               // Duplicate email error: User already exists
-           console.log(`Duplicate email error: ${req.user.email}`)
-            // Pass the error message to the view explicitly
-            return res.render('user/login', { error: 'This email is already associated with an existing account. Please log in.' });
-          }
-            // If any other error occurs, throw the error
-            console.log(err);
-          throw err; // Throw other errors to be caught by the outer catch block
-        }
+        console.error('Google OAuth: no user returned', info);
+        return res.redirect('/login?error=googleAuthFailed');
       }
 
       if (user.isBlocked) {
-        return res.render('user/signup', { message: 'Your account has been blocked' });
+        return res.redirect('/login?error=blocked');
       }
 
-      // Set session for the authenticated user
       req.session.user = user._id;
-
-      // Render the landing page with user details
-      res.render('user/Landingpage', { categories, products, user });
+      return res.redirect('/');
     } catch (error) {
       console.error(`Error during Google OAuth callback: ${error.message}`);
-      res.redirect('/'); // Redirect to home on error
+      return res.redirect('/login?error=googleAuthFailed');
     }
-  }
-);
+  })(req, res, next);
+});
 
 
 
@@ -114,7 +92,7 @@ route.get('/auth/google/callback',
 
 // //---------------------------------- Cart ------------------------
 
-route.post('/cart/add/:id/:finalPrice',checkUser,cartController.addToCart);
+route.post('/cart/add/:id', checkUser, cartController.addToCart);
 route.get('/cart',checkUser, cartController.getCart);
 route.get('/cart/remove/:id', checkUser ,cartController.removeFromCart);
 route.post('/cart/increment',checkUser ,cartController.increment);

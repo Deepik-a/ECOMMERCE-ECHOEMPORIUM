@@ -3,7 +3,7 @@
     <!-- Sidebar Start -->
     <div class="sidebar pe-4 pb-3">
         <nav class="navbar bg-light navbar-light">
-            <a href="index.html" class="navbar-brand mx-4 mb-3">
+            <a href="/admin/dashboard" class="navbar-brand mx-4 mb-3">
                 <h3 class="text-primary"><i class="fa fa-hashtag me-2"></i>Dashboard</h3>
             </a>
             <div class="d-flex align-items-center ms-4 mb-4">
@@ -16,89 +16,102 @@
                 </div>
             </div>
             <div class="navbar-nav w-100">
-                <a href="index.html" class="nav-item nav-link active"><i class="fa fa-tachometer-alt me-2"></i>Dashboard</a>
-                <div class="nav-item ">
-                    <a href="/admin/salesReport" class="nav-link dropdown-toggle" ><i class="fa fa-laptop me-2"></i>Sales Report</a>
-                </div>
-             <!-- Category Section with Toggle -->
-<div class="nav-item">
-    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#CategoryMenu" id="categoryMenuLink">
-        <i class="fa fa-keyboard me-2"></i>Category
-    </a>
-    <div id="CategoryMenu" class="collapse">
-        <ul class="navbar-nav ps-3">
-            <li class="nav-item">
-                <a href="/admin/addCategory" class="nav-link">
-                    <i class="fa fa-plus me-2"></i>Add Category
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/admin/editCategory" class="nav-link">
-                    <i class="fa fa-list me-2"></i>Category List
-                </a>
-            </li>
-        </ul>
-    </div>
-</div>
+                <a href="/admin/dashboard" class="nav-item nav-link" id="nav-dashboard"><i class="fa fa-tachometer-alt me-2"></i>Dashboard</a>
+                <a href="/admin/salesReport" class="nav-item nav-link" id="nav-sales"><i class="fa fa-chart-line me-2"></i>Sales Report</a>
+                <a href="/admin/categories" class="nav-item nav-link" id="nav-category"><i class="fa fa-th-large me-2"></i>Category</a>
 
-<!-- Product Section with Toggle -->
-<div class="nav-item">
-    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#productMenu" id="productMenuLink">
-        <i class="fa fa-keyboard me-2"></i>Products
-    </a>
-    <div id="productMenu" class="collapse">
-        <ul class="navbar-nav ps-3">
-            <li class="nav-item">
-                <a href="/admin/products" class="nav-link">
-                    <i class="fa fa-plus me-2"></i>Add Product
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/admin/editProduct" class="nav-link">
-                    <i class="fa fa-list me-2"></i>Product List
-                </a>
-            </li>
-        </ul>
-    </div>
-</div>
-
-                <a href="/admin/users" class="nav-item nav-link"><i class="fa fa-table me-2"></i>Customers</a>
-                <a href="/admin/coupons" class="nav-item nav-link"><i class="fa fa-chart-bar me-2"></i>Coupons</a>
-                <a href="/admin/orders" class="nav-item nav-link"><i class="fa fa-chart-bar me-2"></i>Orders</a>
-                <a href="/admin/offer-management" class="nav-item nav-link"><i class="fa fa-chart-bar me-2"></i>Offers</a>
-                <a href="/admin/salesReport" class="nav-item nav-link"><i class="fa fa-chart-bar me-2"></i>SalesReport</a>
-                <a href="" class="nav-item nav-link"><i class="fa fa-chart-bar me-2"></i>Logout</a>
-             
+                <!-- Product Section with Toggle -->
+                <div class="nav-item">
+                    <a href="#productMenu" class="nav-link dropdown-toggle" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="productMenu" id="productMenuLink">
+                        <i class="fa fa-box me-2"></i><span>Products</span>
+                    </a>
+                    <div id="productMenu" class="collapse">
+                        <div class="ps-2 py-1 ms-3 border-start border-2 border-primary">
+                            <a href="/admin/products" class="sub-link" id="subnav-products">
+                                <i class="fa fa-list me-2"></i>Product List
+                            </a>
+                            <a href="/admin/addproduct" class="sub-link" id="subnav-addproduct">
+                                <i class="fa fa-plus me-2"></i>Add Product
+                            </a>
+                        </div>
+                    </div>
                 </div>
+
+                <a href="/admin/users" class="nav-item nav-link" id="nav-users"><i class="fa fa-users me-2"></i>Customers</a>
+                <a href="/admin/coupons" class="nav-item nav-link" id="nav-coupons"><i class="fa fa-ticket-alt me-2"></i>Coupons</a>
+                <a href="/admin/orders" class="nav-item nav-link" id="nav-orders"><i class="fa fa-shopping-cart me-2"></i>Orders</a>
+                <a href="/admin/offer-management" class="nav-item nav-link" id="nav-offers"><i class="fa fa-tags me-2"></i>Offers</a>
+                <a href="/admin/logout" class="nav-item nav-link text-danger"><i class="fa fa-sign-out-alt me-2"></i>Logout</a>
             </div>
         </nav>
     </div>
     <!-- Sidebar End -->
+
+    <script>
+      // Automatically keep the active sidebar route highlighted and open
+      document.addEventListener('DOMContentLoaded', () => {
+        const path = window.location.pathname.toLowerCase();
+        const productCollapse = document.getElementById('productMenu');
+        const productLink = document.getElementById('productMenuLink');
+
+        if (path.includes('/admin/product') || path.includes('/admin/addproduct') || path.includes('/admin/updateproduct')) {
+          if (productCollapse) {
+            productCollapse.classList.add('show');
+          }
+          if (productLink) {
+            productLink.classList.add('active');
+            productLink.setAttribute('aria-expanded', 'true');
+          }
+          if (path.includes('/admin/addproduct')) {
+            const el = document.getElementById('subnav-addproduct');
+            if (el) el.classList.add('active');
+          } else {
+            const el = document.getElementById('subnav-products');
+            if (el) el.classList.add('active');
+          }
+        } else if (path.includes('/admin/dashboard')) {
+          const el = document.getElementById('nav-dashboard');
+          if (el) el.classList.add('active');
+        } else if (path.includes('/admin/categories')) {
+          const el = document.getElementById('nav-category');
+          if (el) el.classList.add('active');
+        } else if (path.includes('/admin/users')) {
+          const el = document.getElementById('nav-users');
+          if (el) el.classList.add('active');
+        } else if (path.includes('/admin/orders')) {
+          const el = document.getElementById('nav-orders');
+          if (el) el.classList.add('active');
+        } else if (path.includes('/admin/coupons')) {
+          const el = document.getElementById('nav-coupons');
+          if (el) el.classList.add('active');
+        } else if (path.includes('/admin/salesreport')) {
+          const el = document.getElementById('nav-sales');
+          if (el) el.classList.add('active');
+        } else if (path.includes('/admin/offer')) {
+          const el = document.getElementById('nav-offers');
+          if (el) el.classList.add('active');
+        }
+      });
+    </script>
      
     <!-- Content Start -->
     <div class="content">
       
         <!-- Navbar Start -->
         <nav class="navbar navbar-expand bg-light navbar-light sticky-top px-4 py-0">
-            <a href="index.html" class="navbar-brand d-flex d-lg-none me-4">
+            <a href="/admin/dashboard" class="navbar-brand d-flex d-lg-none me-4">
                 <h2 class="text-primary mb-0"><i class="fa fa-hashtag"></i></h2>
             </a>
             <a href="#" class="sidebar-toggler flex-shrink-0">
                 <i class="fa fa-bars"></i>
             </a>
-            <form class="d-none d-md-flex ms-4">
-                <input class="form-control border-0" type="search" placeholder="Search">
-            </form>
             <div class="navbar-nav align-items-center ms-auto">
                 <div class="nav-item dropdown">
-                    <a href="#" class="nav-link">
-                    
-                        <span class="d-none d-lg-inline-flex">Deepika </span>
+                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                        <span class="d-none d-lg-inline-flex font-semibold">Deepika PS (Admin)</span>
                     </a>
-                    <div class="dropdown-menu dropdown-menu-end bg-light border-0 rounded-0 rounded-bottom m-0">
-                        <a href="#" class="dropdown-item">My Profile</a>
-                        <!-- <a href="#" class="dropdown-item">Settings</a> -->
-                        <a href="#" class="dropdown-item">Log Out</a>
+                    <div class="dropdown-menu dropdown-menu-end bg-light border-0 rounded-0 rounded-bottom m-0 shadow">
+                        <a href="/admin/logout" class="dropdown-item text-danger"><i class="fa fa-sign-out-alt me-2"></i>Log Out</a>
                     </div>
                 </div>
             </div>

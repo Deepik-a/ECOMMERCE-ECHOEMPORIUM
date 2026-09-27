@@ -209,9 +209,7 @@
 							</td>
 							<td class="action-buttons">
 								<% if (item.productID.stock > 0) { %>
-									<form action="/cart/add/<%= item.productID._id %>/<%= item.productID.finalPrice %>" method="POST">
-										<button type="submit" class="btn btn-add-to-cart">Add to Cart</button>
-									</form>
+									<button type="button" class="btn btn-add-to-cart wishlist-add-to-cart" data-product-id="<%= item.productID._id %>">Add to Cart</button>
 								<% } %>
 								<button type="button" class="btn btn-remove delete-btn" data-id="<%= item.productID._id %>">
 									<i class="far fa-trash-alt"></i>
@@ -286,6 +284,83 @@
 						});
 					}
 				});
+			});
+		});
+
+		// Add to cart functionality for wishlist
+		document.querySelectorAll('.wishlist-add-to-cart').forEach(button => {
+			button.addEventListener('click', async function() {
+				const productId = this.dataset.productId;
+				
+				// Prevent duplicate requests
+				if (this.disabled) return;
+				
+				// Set loading state
+				this.disabled = true;
+				const originalText = this.innerHTML;
+				this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+				
+				try {
+					const response = await fetch(`/cart/add/${productId}`, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						}
+					});
+					
+					const data = await response.json();
+					
+					if (response.ok && data.success) {
+						Swal.fire({
+							icon: 'success',
+							title: 'Added to Cart!',
+							text: data.message || 'Product has been added to your cart.',
+							timer: 2000,
+							showConfirmButton: false
+						});
+					} else {
+						let title = 'Error';
+						let message = data.message || 'Something went wrong';
+						
+						switch (response.status) {
+							case 400:
+								title = 'Invalid Request';
+								break;
+							case 401:
+								title = 'Authentication Required';
+								message = 'Please log in to add items to your cart';
+								setTimeout(() => window.location.href = '/login', 2000);
+								break;
+							case 404:
+								title = 'Not Found';
+								break;
+							case 409:
+								title = 'Action Not Allowed';
+								break;
+							case 500:
+								title = 'Server Error';
+								message = 'Please try again later';
+								break;
+						}
+						
+						Swal.fire({
+							icon: 'error',
+							title: title,
+							text: message
+						});
+					}
+				} catch (error) {
+					console.error('Add to cart error:', error);
+					Swal.fire({
+						icon: 'error',
+						title: 'Network Error',
+						text: 'Please check your connection and try again'
+					});
+				} finally {
+					// Reset button state
+					this.disabled = false;
+					this.innerHTML = originalText;
+				}
 			});
 		});
 	});

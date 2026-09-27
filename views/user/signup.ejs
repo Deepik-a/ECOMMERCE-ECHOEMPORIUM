@@ -108,6 +108,9 @@
                 <div class="col-md-6 col-lg-5 animate__animated animate__fadeInRight equal-height-col">
                     <div class="signup-card">
                         <h2 class="text-center mb-4">Create Account</h2>
+                        <% if (typeof error !== 'undefined' && error) { %>
+                            <div class="alert alert-danger" role="alert"><%= error %></div>
+                        <% } %>
                         <form action="/signup" method="post" id="register-form">
                             <div class="form-floating mb-4">
                                 <input type="text" name="name" id="name" class="form-control" placeholder="Name" />

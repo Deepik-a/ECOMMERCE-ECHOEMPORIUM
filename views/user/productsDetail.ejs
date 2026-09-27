@@ -212,11 +212,9 @@
         
                         <!-- Action Buttons -->
                         <div class="d-flex gap-3">
-                            <form action="/cart/add/<%=product._id%>/<%= product.finalPrice %>" method="POST">
-                                <button type="submit" class="btn btn-add-to-cart btn-success">
-                                    <i class="fas fa-shopping-cart me-2"></i>Add to Cart
-                                </button>
-                            </form>
+                            <button type="button" id="add-to-cart-btn" class="btn btn-add-to-cart btn-success" data-product-id="<%= product._id %>">
+                                <i class="fas fa-shopping-cart me-2"></i>Add to Cart
+                            </button>
                             
                             <a href="/categories/<%= categoryName %>" class="btn btn-outline-secondary">
                                 <i class="fas fa-arrow-left me-2"></i>Back to Products
@@ -230,6 +228,87 @@
         <!-- Bootstrap 5 JS and Popper -->
         <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+        <!-- SweetAlert2 -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        
+        <script>
+            // Add to cart functionality with error handling
+            document.getElementById('add-to-cart-btn').addEventListener('click', async function() {
+                const button = this;
+                const productId = button.dataset.productId;
+                
+                // Prevent duplicate requests
+                if (button.disabled) return;
+                
+                // Set loading state
+                button.disabled = true;
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Adding...';
+                
+                try {
+                    const response = await fetch(`/cart/add/${productId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok && data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Added to Cart!',
+                            text: data.message || 'Product has been added to your cart.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        // Handle different error status codes
+                        let title = 'Error';
+                        let message = data.message || 'Something went wrong';
+                        
+                        switch (response.status) {
+                            case 400:
+                                title = 'Invalid Request';
+                                break;
+                            case 401:
+                                title = 'Authentication Required';
+                                message = 'Please log in to add items to your cart';
+                                setTimeout(() => window.location.href = '/login', 2000);
+                                break;
+                            case 404:
+                                title = 'Not Found';
+                                break;
+                            case 409:
+                                title = 'Action Not Allowed';
+                                break;
+                            case 500:
+                                title = 'Server Error';
+                                message = 'Please try again later';
+                                break;
+                        }
+                        
+                        Swal.fire({
+                            icon: 'error',
+                            title: title,
+                            text: message
+                        });
+                    }
+                } catch (error) {
+                    console.error('Add to cart error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Network Error',
+                        text: 'Please check your connection and try again'
+                    });
+                } finally {
+                    // Reset button state
+                    button.disabled = false;
+                    button.innerHTML = originalText;
+                }
+            });
+        </script>
     </body>
     </html>
 

@@ -1,417 +1,628 @@
-
-
     <!-- include the sidebar partial  -->
     <%- include('sidebar') %>
- 
- 
-      <!-- Navbar -->
- <div class="fixed top-0 left-0 right-0 z-10 flex items-center justify-between p-8 h-20 shadow-md ml-64 bg-gray-100">
-     <div>
-         <!-- Default content goes here -->
-         <h2 class="text-lg font-semibold">Products</h2>
-     </div>
-     <div>
-         <h2 class="text-lg font-semibold">Edit Product</h2>
-     </div>
-   </div>
- 
-   <div class="ml-72 mr-8 pb-24 pt-28">
-     <form id="editProductForm"  class="space-y-4">
-       
-       <!-- Product Name and Description -->
-       <div class="flex space-x-4">
-         <div class="w-1/2">
-           <label for="name" class="block">Product Name</label>
-           <input type="text" id="name" name="name" value="<%= product.name %>" class="border border-gray-300 p-2 w-full" required />
-           <p id="productNameError" class="text-red-500 text-sm " aria-live="assertive"></p>
-         </div>
-         <div class="w-1/2">
-           <label for="description" class="block">Description</label>
-           <input type="text" id="description" name="description" value="<%= product.description %>" class="border border-gray-300 p-2 w-full" required>
-           <p id="descriptionError" class="text-red-500 text-sm" aria-live="assertive"></p>
-         </div>
-       </div>
-   
-       <!-- Price and Discount -->
-       <div class="flex space-x-4">
-         <div class="w-1/2">
-           <label for="price" class="block">Price</label>
-           <input type="number" id="price" name="price" value="<%= product.price %>" class="border border-gray-300 p-2 w-full" min="0" required />
-           <p id="priceError" class="text-red-500 text-sm" aria-live="assertive"></p>
-         </div>
-         <div class="w-1/2">
-           <label for="discount" class="block">Discount</label>
-           <input type="number" id="discount" name="discount" value="<%= product.discount %>" class="border border-gray-300 p-2 w-full" min="0" required />
-           <p id="discountError" class="text-red-500 text-sm" aria-live="assertive"></p>
-         </div>
-       </div>
-   
-       <!-- Stock and Warranty -->
-       <div class="flex space-x-4">
-         <div class="w-1/2">
-           <label for="stock" class="block">Stock</label>
-           <input type="number" id="stock" name="stock" value="<%= product.stock %>" class="border border-gray-300 p-2 w-full" min="0" required />
-           <p id="stockError" class="text-red-500 text-sm" aria-live="assertive"></p>
-         </div>
-    
-       </div>
-   
-       <!-- Brand and Category -->
-       <div class="flex space-x-4">
-         
-         <div class="w-1/2">
-           <label for="category" class="block">Category</label>
-           <select id="category" name="category" class="border border-gray-300 p-2 w-full" required>
-             <option value="" disabled >Select a category</option>
-             <!-- Add categories dynamically -->
-             <% categories.forEach(function(category) { %>
-               <option value="<%= category._id %>" <%= product && product.category == category.id ? 'selected' : '' %> ><%= category.name %></option>
-             <% }); %>
-           </select>
-           <p id="categoryError" class="text-red-500 text-sm" aria-live="assertive"></p>
-         </div>
-       </div>
-   
-  
-    
-   
-       <!-- Product Images -->
- <div>
-     <label for="images" class="block">Product Images</label>
-     <input type="file" id="images" accept="image/*" class="border border-blue-500 p-3 w-1/3 cursor-pointer hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-     <p id="imageError" class="text-red-500 text-sm mt-1" aria-live="assertive"></p>
-   
-     <!-- Preview Area for Existing and Cropped Images -->
-     <div id="imagePreview" class="grid grid-cols-3 gap-4 mt-4">
-       <% if (product.imgArray && product.imgArray.length > 0) { %>
-         <% product.imgArray.forEach(function(image, index) { %>
-           <div class="relative existing-image" data-index="<%= index %>" data-id="<%= image %>">
-             <img src="/uploads/<%= image %>" alt="Product Image" class="w-full h-auto rounded">
-             <button class="absolute top-0 right-0 bg-red-600 text-white rounded px-2 py-1 text-xs remove-existing">Remove</button>
-           </div>
-         <% }) %>
-       <% } %>
-     </div>
-   </div>
-   
- 
- 
-  
-   
-       
-       <!-- Submit Button -->
-       <button type="submit" class="absolute right-8 px-4 py-2 bg-blue-800 text-white text-sm tracking-wider font-medium rounded hover:bg-blue-900">Save Changes</button>
-     </form>
- 
- 
- 
- 
-          <!-- Cropper Modal -->
- <div id="cropperModal" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 hidden z-50">
-   <div class="bg-white p-4 rounded-lg w-[600px] h-[530px]">
-     <h2 class="text-lg font-semibold mb-4">Crop Image</h2>
-     <!-- Cropper container -->
-     <div class="w-full h-[400px] flex justify-center items-center overflow-hidden">
-       <img id="cropperImage" src="" alt="To be cropped" class="max-w-full max-h-full block">
-     </div>
-     <!-- Modal buttons -->
-     <div class="flex justify-end space-x-4 mt-4">
-       <button id="cancelCrop" type="button" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Cancel</button>
-       <button id="cropImage" type="button" class="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-900">Crop</button>
-     </div>
-   </div>
- </div>
-   </div>
- 
- 
-   <div id="product-data" data-product='<%- JSON.stringify(product) %>'></div>
- 
- 
-  <!-- JavaScript for handling form submission -->
- <script>
- 
- // Disable Enter key for input fields
- document.querySelectorAll('input').forEach(input => {
-   input.addEventListener('keydown', function (event) {
-     if (event.key === 'Enter') {
-       event.preventDefault();
-     }
-   });
- });
- 
- 
- const productElement = document.getElementById('product-data');
- const product = JSON.parse(productElement.getAttribute('data-product'));
- console.log('product ', product);
- 
- 
- 
- let sidebarOn = true;
- let selectedFile;
- let cropper;
- let croppedImages = []; // Store the cropped images' blobs
- let removedImages = []; // Track removed existing images
- const cropperModal = document.getElementById('cropperModal');
- const imagePreview = document.getElementById('imagePreview');
- const cropperImage = document.getElementById('cropperImage');
- const imagesInput = document.getElementById('images');
- const imageError = document.getElementById("imageError");
- 
- // Handle removing existing images
- imagePreview.addEventListener('click', function(e) {
-   if (e.target.classList.contains('remove-existing')) {
-     const imageElement = e.target.closest('.existing-image');
-     const imageId = imageElement.dataset.id;
-     imagePreview.removeChild(imageElement);
-         
-     // Add the image id to the removedImages array
-     removedImages.push(imageId);
-   }
- });
- 
- // Handle cropping of new images
- imagesInput.addEventListener('change', (event) => {
-   const files = event.target.files;
-   if (files && files.length > 0) {
-     selectedFile = files[0];
- 
- 
-     imageError.textContent = '';
-     
-     // Validate file type
-     if (!selectedFile.type.startsWith('image/')) {
-       imageError.textContent = 'Please select an image file.';
- 
-       imagesInput.value = '';
-       return;
-     }
- 
-     const reader = new FileReader();
- 
-     reader.onload = function (e) {
-       cropperImage.src = e.target.result;
-       cropperModal.classList.remove('hidden');
-       if (cropper) {
-         cropper.destroy();
-       }
-       cropper = new Cropper(cropperImage, {
-         aspectRatio: 1,
-         viewMode: 1,
-         autoCropArea: 1,
-       });
-     };
-     reader.readAsDataURL(selectedFile);
-   }
- });
- 
- 
- // Cancel button - close the modal
- document.getElementById('cancelCrop').addEventListener('click', () => {
-       cropperModal.classList.add('hidden');
-       imagesInput.value = ''; // Clear selected files
-     });
- 
- 
- 
- document.getElementById('cropImage').addEventListener('click', () => {
-   const canvas = cropper.getCroppedCanvas();
-   canvas.toBlob((blob) => {
-     const croppedFile = new File([blob], `cropped-${Date.now()}.png`, { type: 'image/png' });
- 
-     // Store the cropped image in croppedImages array
-     croppedImages.push(croppedFile);
- 
-     // Create the preview element
-     const previewContainer = document.createElement('div');
-     previewContainer.classList.add('relative');
- 
-     const img = document.createElement('img');
-     img.src = URL.createObjectURL(croppedFile);
-     img.classList.add('w-full', 'h-auto', 'rounded');
- 
-     const removeButton = document.createElement('button');
-     removeButton.textContent = 'Remove';
-     removeButton.classList.add('absolute', 'top-0', 'right-0', 'bg-red-600', 'text-white', 'rounded', 'px-2', 'py-1', 'text-xs');
-     removeButton.addEventListener('click', (e) => {
-       e.preventDefault();
-       imagePreview.removeChild(previewContainer); // Remove preview
-       const index = croppedImages.indexOf(croppedFile);
-       if (index > -1) {
-         croppedImages.splice(index, 1); // Remove from array
-       }
- 
-       imagesInput.value = '';
-     });
- 
-     previewContainer.appendChild(img);
-     previewContainer.appendChild(removeButton);
-     imagePreview.appendChild(previewContainer);
- 
-     cropperModal.classList.add('hidden'); // Close modal
-     imagesInput.value = '';
-   }, 'image/png');
- });
- 
- // Form submission 
- document.getElementById("editProductForm").addEventListener("submit", async function (e) {
-   e.preventDefault();
- 
-   let isValid = true;
- 
-   // Existing validation logic here...
-    // Product Name validation
-    const productName = document.getElementById("name").value;
-       const productNameError = document.getElementById("productNameError");
-       if (productName.length < 3 || productName.length > 50 || /[^a-zA-Z0-9 ]/.test(productName)) {
-         productNameError.textContent = "Product name must be between 3 and 50 characters and contain no special characters.";
-         isValid = false;
-       } else {
-         productNameError.textContent = "";
-       }
-   
-       // Description validation
-       const description = document.getElementById("description").value;
-       const descriptionError = document.getElementById("descriptionError");
-       if (description.length < 10 || description.length > 1000) {
-         descriptionError.textContent = "Product description must be between 10 and 1000 characters.";
-         isValid = false;
-       } else {
-         descriptionError.textContent = "";
-       }
-   
- 
-        // Category validation
-        const category = document.getElementById("category").value;
-         const categoryError = document.getElementById("categoryError");
-         if (!category) {
-             categoryError.textContent = "Please select a category.";
-             isValid = false;
-         } else {
-             categoryError.textContent = "";
-         }
- 
-         // Price validation
-         const price = parseFloat(document.getElementById("price").value);
-         const priceError = document.getElementById("priceError");
-         if (isNaN(price) || price <= 0) {
-             priceError.textContent = "Product price must be greater than zero.";
-             isValid = false;
-         } else {
-             priceError.textContent = "";
-         }
- 
-         // Stock validation
-         const stock = parseInt(document.getElementById("stock").value);
-         const stockError = document.getElementById("stockError");
-         if (isNaN(stock) || stock < 0) {
-             stockError.textContent = "Stock must be zero or greater.";
-             isValid = false;
-         } else {
-             stockError.textContent = "";
-         }
- 
-         // Discount validation
-         const discount = parseInt(document.getElementById("discount").value);
-         const discountError = document.getElementById("discountError");
-         if (isNaN(discount) || discount < 0 || discount > 100) {
-             discountError.textContent = "Discount must be between 0 and 100.";
-             isValid = false;
-         } else {
-             discountError.textContent = "";
-         }
- 
- 
-  
-       
-   if (croppedImages.length < 3 && (product.imgArray.length - removedImages.length + croppedImages.length) < 3) {
-     imageError.textContent = "Please select at least 3 images.";
-     isValid = false;
-   } else {
-     imageError.textContent = "";
-   }
- 
-   if (!isValid) {
-     return;
-   }
- 
-   const formData = new FormData(this);
- 
-   // Append the removed images array
-   formData.append('removedImages', JSON.stringify(removedImages));
- 
-   // Append all the cropped images (newly added)
-   croppedImages.forEach((image, index) => {
-     formData.append('newImages', image);
-   });
- 
-  
-   try {
-     const response = await fetch(`/admin/updateproduct/<%=product.id%>`, {
-       method: 'POST',
-       body: formData,
-     });
-     
-     const result = await response.json();
-     console.log(response.ok)
-     if (response.ok) {
-       Swal.fire({
-         icon: 'success',
-         title: 'Successfully Updated!',
-         text: 'Product successfully updated.',
-         background: '#F8F9FA',
-         color: '#333',
-         timer: 2000,
-         showConfirmButton: false
-       });
-       setTimeout(() => {
-         window.location.href = '/admin/products';
-       }, 2000);
-     } 
-     
-     if (!response.ok) {
-         Swal.fire({
-         icon: 'error',
-         title: 'Update Failed',
-         text: result.message,
-         background: '#F8F9FA',
-         color: '#333',
-         timer: 3000,
-         showConfirmButton: false
-     });
- 
-     setTimeout(() => {
-         window.location.href = '/admin/products';
-       }, 3000);
- 
-       console.error(result.message);
-     }
-   } catch (error) {
-     console.error(error);
-   }
- });
- 
-   
- </script>
 
- <!-- JavaScript Libraries(needed)-->
- <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- Cropper JS -->
-  <link href="https://unpkg.com/cropperjs/dist/cropper.min.css" rel="stylesheet">
+    <!-- Navbar -->
+    <div class="fixed top-0 left-0 right-0 z-10 flex items-center justify-between p-8 h-20 shadow-md ml-64 bg-gray-100">
+      <div>
+        <h2 class="text-lg font-semibold">Products</h2>
+      </div>
+      <div>
+        <h2 class="text-lg font-semibold">Edit Product</h2>
+      </div>
+    </div>
 
-  <!-- Toastify  -->
-  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-     <!-- Tailwind CSS Script -->
-     <script src="https://cdn.tailwindcss.com"></script>
+    <div class="ml-72 mr-8 pb-24 pt-28 max-w-4xl">
+      <form id="editProductForm" class="space-y-6 bg-white p-8 rounded-xl shadow-sm border border-gray-200">
+        <!-- Product Name -->
+        <div>
+          <label for="name" class="block font-medium text-gray-700 mb-1">Product Name <span class="text-red-500">*</span></label>
+          <input type="text" id="name" name="name" value="<%= product.name %>" placeholder="Enter product name (3–100 chars)" class="border border-gray-300 rounded-lg p-2.5 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none transition" />
+          <p id="productNameError" class="text-red-500 text-sm mt-1" aria-live="assertive"></p>
+        </div>
 
-     <!-- SweetAlert -->
-     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
- 
-     <!-- Cropper JS -->
-     <script src="https://unpkg.com/cropperjs/dist/cropper.min.js"></script> 
- 
-     <!-- Toastify  -->
-     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
- 
-  
- 
+        <!-- Description -->
+        <div>
+          <label for="description" class="block font-medium text-gray-700 mb-1">Description <span class="text-red-500">*</span></label>
+          <textarea id="description" name="description" rows="4" placeholder="Enter detailed description (min 20, max 2000 chars)" class="border border-gray-300 rounded-lg p-2.5 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none transition"><%= product.description %></textarea>
+          <div class="flex justify-between items-center mt-1">
+            <p id="descriptionError" class="text-red-500 text-sm" aria-live="assertive"></p>
+            <span id="descriptionCounter" class="text-xs text-gray-400"><%= (product.description || '').length %> / 2000</span>
+          </div>
+        </div>
+
+        <!-- Price and Discount -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label for="price" class="block font-medium text-gray-700 mb-1">Price (₹) <span class="text-red-500">*</span></label>
+            <input type="number" id="price" name="price" value="<%= product.price %>" step="0.01" min="0.01" max="1000000" placeholder="e.g. 499.00" class="border border-gray-300 rounded-lg p-2.5 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none transition" />
+            <p id="priceError" class="text-red-500 text-sm mt-1" aria-live="assertive"></p>
+          </div>
+
+          <div>
+            <label for="discount" class="block font-medium text-gray-700 mb-1">Discount (%) <span class="text-xs text-gray-400 font-normal">(Optional, 0–99%)</span></label>
+            <input type="number" id="discount" name="discount" value="<%= product.discount || 0 %>" step="0.01" min="0" max="99" placeholder="e.g. 10" class="border border-gray-300 rounded-lg p-2.5 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none transition" />
+            <p id="discountError" class="text-red-500 text-sm mt-1" aria-live="assertive"></p>
+          </div>
+        </div>
+
+        <!-- Stock and Category -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label for="stock" class="block font-medium text-gray-700 mb-1">Stock (Units) <span class="text-red-500">*</span></label>
+            <input type="number" id="stock" name="stock" value="<%= product.stock %>" step="1" min="0" max="500" placeholder="e.g. 50 (Max 500)" class="border border-gray-300 rounded-lg p-2.5 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none transition" />
+            <p id="stockError" class="text-red-500 text-sm mt-1" aria-live="assertive"></p>
+          </div>
+
+          <div>
+            <label for="category" class="block font-medium text-gray-700 mb-1">Category <span class="text-red-500">*</span></label>
+            <select id="category" name="category" class="border border-gray-300 rounded-lg p-2.5 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none transition bg-white">
+              <option value="" disabled>Select a category</option>
+              <% categories.forEach(function(cat) { %>
+                <option value="<%= cat._id %>" <%= product && ((product.category && product.category._id) ? product.category._id.toString() : (product.category ? product.category.toString() : '')) === cat._id.toString() ? 'selected' : '' %>><%= cat.name %></option>
+              <% }); %>
+            </select>
+            <p id="categoryError" class="text-red-500 text-sm mt-1" aria-live="assertive"></p>
+          </div>
+        </div>
+
+        <!-- Product Images -->
+        <div class="border-t border-gray-100 pt-6">
+          <label for="images" class="block font-medium text-gray-700 mb-1">Product Images <span class="text-red-500">* (Min 3 total required)</span></label>
+          <p class="text-xs text-gray-500 mb-2">Accepted formats: JPG, JPEG, PNG, WEBP. Max 5MB per image.</p>
+          <input type="file" id="images" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" class="border border-blue-400 bg-blue-50 p-2.5 rounded-lg w-full cursor-pointer hover:bg-blue-100 focus:outline-none transition" />
+          <p id="imageError" class="text-red-500 text-sm mt-2 font-medium" aria-live="assertive"></p>
+
+          <!-- Preview Area for Existing and Cropped Images -->
+          <div id="imagePreview" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+            <% if (product.imgArray && product.imgArray.length > 0) { %>
+              <% product.imgArray.forEach(function(image, index) { %>
+                <div class="relative existing-image border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white" data-index="<%= index %>" data-id="<%= image %>">
+                  <img src="/uploads/<%= image %>" alt="Product Image" class="w-full h-32 object-cover">
+                  <button type="button" class="absolute top-1 right-1 bg-red-600 text-white rounded px-2 py-0.5 text-xs hover:bg-red-700 shadow remove-existing">&times; Remove</button>
+                </div>
+              <% }) %>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="text-right border-t border-gray-100 pt-6">
+          <button type="submit" id="submitBtn" class="px-6 py-3 bg-blue-800 text-white font-semibold rounded-lg hover:bg-blue-900 shadow-md transition disabled:opacity-50">Save Changes</button>
+        </div>
+      </form>
+
+      <!-- Cropper Modal -->
+      <div id="cropperModal" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 hidden z-50 p-4">
+        <div class="bg-white p-6 rounded-2xl w-full max-w-[650px] shadow-2xl">
+          <h2 class="text-xl font-bold text-gray-800 mb-3">Crop Image</h2>
+          <div class="w-full h-[380px] bg-gray-100 flex justify-center items-center overflow-hidden rounded-lg">
+            <img id="cropperImage" src="" alt="To be cropped" class="max-w-full max-h-full block">
+          </div>
+          <div class="flex justify-end space-x-3 mt-5">
+            <button id="cancelCrop" type="button" class="px-5 py-2.5 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition">Cancel</button>
+            <button id="cropImage" type="button" class="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 shadow transition">Crop & Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="product-data" data-product='<%- JSON.stringify(product) %>'></div>
+
+    <!-- JavaScript for handling form submission -->
+    <script>
+      const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB limit
+      const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      const ALLOWED_EXTS = ['.jpg', '.jpeg', '.png', '.webp'];
+
+      const productElement = document.getElementById('product-data');
+      const product = JSON.parse(productElement.getAttribute('data-product'));
+
+      let selectedFile = null;
+      let cropper = null;
+      let croppedImages = []; // Store the cropped images' blobs
+      let removedImages = []; // Track removed existing images
+
+      const cropperModal = document.getElementById('cropperModal');
+      const imagePreview = document.getElementById('imagePreview');
+      const cropperImage = document.getElementById('cropperImage');
+      const imagesInput = document.getElementById('images');
+      const imageError = document.getElementById("imageError");
+
+      // Helper to sanitize HTML
+      function sanitizeHTML(str) {
+        if (!str) return '';
+        return str.replace(/<[^>]*>?/gm, '').trim();
+      }
+
+      // Real-time Field Validators
+      function validateProductName() {
+        const input = document.getElementById('name');
+        const err = document.getElementById('productNameError');
+        const val = input.value.trim();
+
+        if (!val) {
+          err.textContent = 'Product name is required.';
+          input.classList.add('border-red-500');
+          return false;
+        }
+        if (val.length < 3) {
+          err.textContent = 'Product name must be at least 3 characters.';
+          input.classList.add('border-red-500');
+          return false;
+        }
+        if (val.length > 100) {
+          err.textContent = 'Product name cannot exceed 100 characters.';
+          input.classList.add('border-red-500');
+          return false;
+        }
+        if (!/[a-zA-Z]/.test(val)) {
+          err.textContent = 'Product name must contain letters and cannot consist only of numbers or symbols.';
+          input.classList.add('border-red-500');
+          return false;
+        }
+        if (/^[^a-zA-Z0-9]+$/.test(val)) {
+          err.textContent = 'Product name cannot consist only of special characters.';
+          input.classList.add('border-red-500');
+          return false;
+        }
+
+        err.textContent = '';
+        input.classList.remove('border-red-500');
+        return true;
+      }
+
+      function validateDescription() {
+        const input = document.getElementById('description');
+        const err = document.getElementById('descriptionError');
+        const counter = document.getElementById('descriptionCounter');
+        const sanitized = sanitizeHTML(input.value);
+
+        if (counter) {
+          counter.textContent = `${sanitized.length} / 2000`;
+        }
+
+        if (!sanitized) {
+          err.textContent = 'Product description is required.';
+          input.classList.add('border-red-500');
+          return false;
+        }
+        if (sanitized.length < 20) {
+          err.textContent = `Description must be at least 20 characters (current: ${sanitized.length}).`;
+          input.classList.add('border-red-500');
+          return false;
+        }
+        if (sanitized.length > 2000) {
+          err.textContent = 'Description cannot exceed 2000 characters.';
+          input.classList.add('border-red-500');
+          return false;
+        }
+
+        err.textContent = '';
+        input.classList.remove('border-red-500');
+        return true;
+      }
+
+      function validatePrice() {
+        const input = document.getElementById('price');
+        const err = document.getElementById('priceError');
+        const raw = input.value.trim();
+
+        if (!raw) {
+          err.textContent = 'Price is required.';
+          input.classList.add('border-red-500');
+          return false;
+        }
+
+        const val = parseFloat(raw);
+        if (isNaN(val) || !/^\d+(\.\d{1,2})?$/.test(raw)) {
+          err.textContent = 'Price must be a valid number with at most 2 decimal places.';
+          input.classList.add('border-red-500');
+          return false;
+        }
+        if (val <= 0) {
+          err.textContent = 'Price must be greater than zero.';
+          input.classList.add('border-red-500');
+          return false;
+        }
+        if (val > 1000000) {
+          err.textContent = 'Price cannot exceed ₹1,000,000.';
+          input.classList.add('border-red-500');
+          return false;
+        }
+
+        err.textContent = '';
+        input.classList.remove('border-red-500');
+
+        validateDiscount();
+        return true;
+      }
+
+      function validateDiscount() {
+        const input = document.getElementById('discount');
+        const err = document.getElementById('discountError');
+        const raw = input.value.trim();
+
+        if (!raw) {
+          err.textContent = '';
+          input.classList.remove('border-red-500');
+          return true;
+        }
+
+        const val = parseFloat(raw);
+        if (isNaN(val) || !/^\d+(\.\d{1,2})?$/.test(raw)) {
+          err.textContent = 'Discount must be a valid number (max 2 decimal places).';
+          input.classList.add('border-red-500');
+          return false;
+        }
+        if (val < 0 || val >= 100) {
+          err.textContent = 'Discount percentage must be between 0% and 99%.';
+          input.classList.add('border-red-500');
+          return false;
+        }
+
+        const priceVal = parseFloat(document.getElementById('price').value.trim());
+        if (!isNaN(priceVal) && priceVal > 0) {
+          const finalPrice = priceVal - (priceVal * (val / 100));
+          if (finalPrice <= 0) {
+            err.textContent = 'Discounted price must be greater than ₹0.';
+            input.classList.add('border-red-500');
+            return false;
+          }
+        }
+
+        err.textContent = '';
+        input.classList.remove('border-red-500');
+        return true;
+      }
+
+      function validateStock() {
+        const input = document.getElementById('stock');
+        const err = document.getElementById('stockError');
+        const raw = input.value.trim();
+
+        if (!raw) {
+          err.textContent = 'Stock is required.';
+          input.classList.add('border-red-500');
+          return false;
+        }
+
+        const val = Number(raw);
+        if (isNaN(val) || !/^\d+$/.test(raw) || !Number.isInteger(val)) {
+          err.textContent = 'Stock must be a whole non-negative integer (no decimals).';
+          input.classList.add('border-red-500');
+          return false;
+        }
+        if (val < 0) {
+          err.textContent = 'Stock cannot be negative.';
+          input.classList.add('border-red-500');
+          return false;
+        }
+        if (val > 500) {
+          err.textContent = 'Stock cannot exceed 500 units.';
+          input.classList.add('border-red-500');
+          return false;
+        }
+
+        err.textContent = '';
+        input.classList.remove('border-red-500');
+        return true;
+      }
+
+      function validateCategory() {
+        const input = document.getElementById('category');
+        const err = document.getElementById('categoryError');
+        const val = input.value;
+
+        if (!val || val === 'Select a category') {
+          err.textContent = 'Please select a category.';
+          input.classList.add('border-red-500');
+          return false;
+        }
+
+        err.textContent = '';
+        input.classList.remove('border-red-500');
+        return true;
+      }
+
+      function getTotalImagesCount() {
+        const initialCount = (product.imgArray && product.imgArray.length) || 0;
+        const remainingExistingCount = initialCount - removedImages.length;
+        return remainingExistingCount + croppedImages.length;
+      }
+
+      function validateImagesCount() {
+        const total = getTotalImagesCount();
+        if (total < 3) {
+          imageError.textContent = `At least 3 images are required (currently total: ${total}).`;
+          return false;
+        }
+        imageError.textContent = '';
+        return true;
+      }
+
+      // Attach event listeners
+      document.getElementById('name').addEventListener('input', validateProductName);
+      document.getElementById('name').addEventListener('blur', validateProductName);
+
+      document.getElementById('description').addEventListener('input', validateDescription);
+      document.getElementById('description').addEventListener('blur', validateDescription);
+
+      document.getElementById('price').addEventListener('input', validatePrice);
+      document.getElementById('price').addEventListener('blur', validatePrice);
+
+      document.getElementById('discount').addEventListener('input', validateDiscount);
+      document.getElementById('discount').addEventListener('blur', validateDiscount);
+
+      document.getElementById('stock').addEventListener('input', validateStock);
+      document.getElementById('stock').addEventListener('blur', validateStock);
+
+      document.getElementById('category').addEventListener('change', validateCategory);
+
+      // Handle removing existing images
+      imagePreview.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-existing')) {
+          const imageElement = e.target.closest('.existing-image');
+          const imageId = imageElement.dataset.id;
+          imagePreview.removeChild(imageElement);
+          removedImages.push(imageId);
+          validateImagesCount();
+        }
+      });
+
+      // Handle cropping of new images with real-time size & format validation
+      imagesInput.addEventListener('change', (event) => {
+        const files = event.target.files;
+        if (files && files.length > 0) {
+          selectedFile = files[0];
+          imageError.textContent = '';
+
+          const fileName = selectedFile.name.toLowerCase();
+          const hasValidExt = ALLOWED_EXTS.some(ext => fileName.endsWith(ext));
+          const hasValidMime = ALLOWED_TYPES.includes(selectedFile.type.toLowerCase());
+
+          // Validate file type
+          if (!hasValidExt || !hasValidMime) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Invalid File Type',
+              text: 'Only JPG, JPEG, PNG, and WEBP image files are allowed. PDF, EXE and other formats are rejected.',
+              confirmButtonColor: '#009CFF'
+            });
+            imagesInput.value = '';
+            return;
+          }
+
+          // Validate file size (Max 5MB)
+          if (selectedFile.size > MAX_FILE_SIZE) {
+            const fileSizeMB = (selectedFile.size / (1024 * 1024)).toFixed(2);
+            Swal.fire({
+              icon: 'warning',
+              title: 'Image Too Large',
+              html: `The selected image is <strong>${fileSizeMB} MB</strong>.<br>Maximum allowed size is <strong>5 MB</strong>.<br>Please choose a smaller image.`,
+              confirmButtonColor: '#009CFF'
+            });
+            imagesInput.value = '';
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            cropperImage.src = e.target.result;
+            cropperModal.classList.remove('hidden');
+            if (cropper) {
+              cropper.destroy();
+            }
+            cropper = new Cropper(cropperImage, {
+              aspectRatio: 1,
+              viewMode: 1,
+              autoCropArea: 1,
+            });
+          };
+          reader.readAsDataURL(selectedFile);
+        }
+      });
+
+      // Cancel button - close the modal
+      document.getElementById('cancelCrop').addEventListener('click', () => {
+        cropperModal.classList.add('hidden');
+        imagesInput.value = '';
+      });
+
+      // Crop image button
+      document.getElementById('cropImage').addEventListener('click', () => {
+        if (!cropper) return;
+        const canvas = cropper.getCroppedCanvas({
+          maxWidth: 1600,
+          maxHeight: 1600
+        });
+        if (!canvas) {
+          imageError.textContent = 'Could not process crop. Please try again.';
+          return;
+        }
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            imageError.textContent = 'Failed to generate cropped image.';
+            return;
+          }
+
+          // Check cropped blob size in real-time
+          if (blob.size > MAX_FILE_SIZE) {
+            const blobSizeMB = (blob.size / (1024 * 1024)).toFixed(2);
+            cropperModal.classList.add('hidden');
+            Swal.fire({
+              icon: 'warning',
+              title: 'Cropped Image Too Large',
+              html: `The cropped image is <strong>${blobSizeMB} MB</strong>.<br>Maximum allowed size is <strong>5 MB</strong>.<br>Please crop a smaller area or choose a different image.`,
+              confirmButtonColor: '#009CFF'
+            });
+            imagesInput.value = '';
+            return;
+          }
+
+          imageError.textContent = '';
+          const croppedFile = new File([blob], `product-${Date.now()}-${croppedImages.length + 1}.png`, { type: 'image/png' });
+          croppedImages.push(croppedFile);
+
+          // Create preview element
+          const previewContainer = document.createElement('div');
+          previewContainer.classList.add('relative', 'border', 'border-gray-200', 'rounded-lg', 'overflow-hidden', 'shadow-sm', 'bg-white');
+
+          const img = document.createElement('img');
+          img.src = URL.createObjectURL(croppedFile);
+          img.classList.add('w-full', 'h-32', 'object-cover');
+
+          const removeButton = document.createElement('button');
+          removeButton.type = 'button';
+          removeButton.innerHTML = '&times; Remove';
+          removeButton.classList.add('absolute', 'top-1', 'right-1', 'bg-red-600', 'text-white', 'rounded', 'px-2', 'py-0.5', 'text-xs', 'hover:bg-red-700', 'shadow');
+          removeButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            imagePreview.removeChild(previewContainer);
+            const index = croppedImages.indexOf(croppedFile);
+            if (index > -1) {
+              croppedImages.splice(index, 1);
+            }
+            imagesInput.value = '';
+            validateImagesCount();
+          });
+
+          previewContainer.appendChild(img);
+          previewContainer.appendChild(removeButton);
+          imagePreview.appendChild(previewContainer);
+
+          cropperModal.classList.add('hidden');
+          imagesInput.value = '';
+          validateImagesCount();
+        }, 'image/png');
+      });
+
+      // Form submission
+      document.getElementById("editProductForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        // Clear previous error messages
+        const errorIds = ['productNameError', 'descriptionError', 'priceError', 'discountError', 'stockError', 'categoryError', 'imageError'];
+        errorIds.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = '';
+        });
+
+        const vName = validateProductName();
+        const vDesc = validateDescription();
+        const vPrice = validatePrice();
+        const vDisc = validateDiscount();
+        const vStock = validateStock();
+        const vCat = validateCategory();
+        const vImg = validateImagesCount();
+
+        if (!vName || !vDesc || !vPrice || !vDisc || !vStock || !vCat || !vImg) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Please correct the highlighted errors',
+            text: 'Ensure all required fields are filled out properly and at least 3 total images are present.',
+            confirmButtonColor: '#009CFF'
+          });
+          return;
+        }
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving Changes...';
+
+        const formData = new FormData();
+        formData.append('name', document.getElementById('name').value.trim());
+        formData.append('description', sanitizeHTML(document.getElementById('description').value));
+        formData.append('price', document.getElementById('price').value.trim());
+        formData.append('discount', document.getElementById('discount').value.trim() || '0');
+        formData.append('stock', document.getElementById('stock').value.trim());
+        formData.append('category', document.getElementById('category').value);
+        formData.append('removedImages', JSON.stringify(removedImages));
+
+        croppedImages.forEach((image) => {
+          formData.append('newImages', image);
+        });
+
+        try {
+          const response = await fetch(`/admin/updateproduct/<%=product.id%>`, {
+            method: 'POST',
+            body: formData,
+          });
+
+          const result = await response.json();
+          if (response.ok && result.success !== false) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Product Updated!',
+              text: result.message || 'Product updated successfully.',
+              timer: 2000,
+              showConfirmButton: false
+            });
+            setTimeout(() => {
+              window.location.href = '/admin/products';
+            }, 1800);
+          } else {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Save Changes';
+
+            if (result.errors) {
+              if (result.errors.productName) {
+                document.getElementById('productNameError').textContent = result.errors.productName;
+                document.getElementById('name').classList.add('border-red-500');
+              }
+              if (result.errors.description) {
+                document.getElementById('descriptionError').textContent = result.errors.description;
+                document.getElementById('description').classList.add('border-red-500');
+              }
+              if (result.errors.price) {
+                document.getElementById('priceError').textContent = result.errors.price;
+                document.getElementById('price').classList.add('border-red-500');
+              }
+              if (result.errors.discount) {
+                document.getElementById('discountError').textContent = result.errors.discount;
+                document.getElementById('discount').classList.add('border-red-500');
+              }
+              if (result.errors.stock) {
+                document.getElementById('stockError').textContent = result.errors.stock;
+                document.getElementById('stock').classList.add('border-red-500');
+              }
+              if (result.errors.category) {
+                document.getElementById('categoryError').textContent = result.errors.category;
+                document.getElementById('category').classList.add('border-red-500');
+              }
+              if (result.errors.images) {
+                document.getElementById('imageError').textContent = result.errors.images;
+              }
+            }
+
+            Swal.fire({
+              icon: 'error',
+              title: 'Update Failed',
+              text: result.message || 'An error occurred while updating the product.',
+              confirmButtonColor: '#009CFF'
+            });
+          }
+        } catch (error) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Save Changes';
+          console.error(error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Server Error',
+            text: 'There was an issue processing your request. Please try again.',
+            confirmButtonColor: '#009CFF'
+          });
+        }
+      });
+    </script>
+
+    <!-- JavaScript Libraries(needed)-->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Cropper JS -->
+    <link href="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.css" rel="stylesheet">
+    <!-- Tailwind CSS Script -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SweetAlert -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Cropper JS -->
+    <script src="https://unpkg.com/cropperjs@1.6.2/dist/cropper.min.js"></script>

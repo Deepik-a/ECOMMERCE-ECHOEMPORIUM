@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zoomed Product Images</title>
-    <link rel="stylesheet" href="/path/to/bootstrap.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .zoomed-img {
             width: 100%;
@@ -25,7 +25,7 @@
         <div class="row">
             <% product.imgArray.forEach((img, index) => { %>
                 <div class="col-md-4 zoom-container">
-                    <img id="zoomedImg<%= index %>" src="<%= '/uploads/' +img.productImage%>" alt="Zoomed Image" class="zoomed-img img-thumbnail">
+                    <img id="zoomedImg<%= index %>" src="<%= '/uploads/' + img %>" alt="Zoomed Image" class="zoomed-img img-thumbnail">
                 </div>
             <% }) %>
         </div>

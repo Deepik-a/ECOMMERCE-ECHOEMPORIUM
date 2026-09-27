@@ -1,17 +1,4 @@
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 <%-include('navbar') %>
 <title>Your Cart</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
@@ -258,7 +245,7 @@
                                     </td>
                                     <td data-label="Total">$<span class="item-total" data-price="<%= item.productPrice %>"><%= (item.productPrice * item.productCount).toFixed(2) %></span></td>
                                     <td data-label="Action">
-                                        <a href="/cart/remove/<%= item.productId._id %>" class="btn remove-btn">Remove</a>
+                                        <button type="button" class="btn remove-btn remove-item-btn" data-product-id="<%= item.productId._id %>">Remove</button>
                                     </td>
                                 </tr>
                             <% }); %>
@@ -299,6 +286,14 @@
                 const productCountElement = form.querySelector('.quantity-input');
                 let productCount = parseInt(productCountElement.value);
 
+                // Prevent duplicate requests
+                if (form.classList.contains('loading')) return;
+
+                // Set loading state
+                form.classList.add('loading');
+                const buttons = form.querySelectorAll('button');
+                buttons.forEach(btn => btn.disabled = true);
+
                 if (action === 'increment') {
                     productCount++;
                 } else if (action === 'decrement' && productCount > 1) {
@@ -310,58 +305,158 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ productId, productCount })
+                    body: JSON.stringify({ productId })
                 })
                 .then(response => response.json())
                 .then(data => {
                     console.log('Response data:', data);
                     if (data.success) {
-                        productCountElement.value = productCount;
+                        productCountElement.value = action === 'increment' ? productCount : productCount;
                         const itemTotal = (data.updatedPrice).toFixed(2);
                         form.closest('tr').querySelector('.item-total').textContent = itemTotal;
                         document.getElementById('cart-total').textContent = `Total Amount: $${data.cartTotal.toFixed(2)}`;
                         
                         const decrementButton = form.querySelector('.decrement-quantity');
-                        if (productCount === 1) {
+                        if (data.disableButton) {
                             decrementButton.setAttribute('disabled', true);
                         } else {
                             decrementButton.removeAttribute('disabled');
                         }
                     } else {
-                        if (data.message.includes('Maximum quantity')) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Limit Exceeded',
-                                text: data.message
-                            });
-                        } else if (data.message.includes('Available quantity')) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Stock Exceeded',
-                                text: data.message
-                            });
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: data.message || 'Could not update quantity'
-                            });
+                        // Handle different error status codes
+                        let title = 'Error';
+                        let message = data.message || 'Could not update quantity';
+                        
+                        if (message.includes('Maximum quantity')) {
+                            title = 'Limit Exceeded';
+                        } else if (message.includes('Available quantity')) {
+                            title = 'Stock Exceeded';
+                        } else if (message.includes('not found')) {
+                            title = 'Not Found';
                         }
+                        
+                        Swal.fire({
+                            icon: 'error',
+                            title: title,
+                            text: message
+                        });
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     Swal.fire({
                         icon: 'error',
-                        title: 'Error',
-                        text: 'Something went wrong!'
+                        title: 'Network Error',
+                        text: 'Please check your connection and try again'
                     });
+                })
+                .finally(() => {
+                    // Reset loading state
+                    form.classList.remove('loading');
+                    buttons.forEach(btn => btn.disabled = false);
                 });
             });
         });
 
-
-
+        // Remove item from cart with error handling
+        document.querySelectorAll('.remove-item-btn').forEach(button => {
+            button.addEventListener('click', async function() {
+                const productId = this.dataset.productId;
+                const row = this.closest('tr');
+                
+                // Prevent duplicate requests
+                if (this.disabled) return;
+                
+                // Confirm removal
+                const result = await Swal.fire({
+                    title: 'Remove Item',
+                    text: 'Are you sure you want to remove this item from your cart?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, remove it!'
+                });
+                
+                if (!result.isConfirmed) return;
+                
+                // Set loading state
+                this.disabled = true;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                
+                try {
+                    const response = await fetch(`/cart/remove/${productId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok && data.success) {
+                        // Remove the row from the table
+                        row.remove();
+                        
+                        // Update cart total
+                        const cartTotal = data.cart.totalPrice.toFixed(2);
+                        document.getElementById('cart-total').textContent = `Total Amount: $${cartTotal}`;
+                        
+                        // Check if cart is empty
+                        const remainingItems = document.querySelectorAll('tbody tr').length;
+                        if (remainingItems === 0) {
+                            location.reload();
+                        }
+                        
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Removed!',
+                            text: 'Item has been removed from your cart.',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        let title = 'Error';
+                        let message = data.message || 'Could not remove item';
+                        
+                        switch (response.status) {
+                            case 400:
+                                title = 'Invalid Request';
+                                break;
+                            case 401:
+                                title = 'Authentication Required';
+                                message = 'Please log in to manage your cart';
+                                setTimeout(() => window.location.href = '/login', 2000);
+                                break;
+                            case 404:
+                                title = 'Not Found';
+                                break;
+                            case 500:
+                                title = 'Server Error';
+                                message = 'Please try again later';
+                                break;
+                        }
+                        
+                        Swal.fire({
+                            icon: 'error',
+                            title: title,
+                            text: message
+                        });
+                    }
+                } catch (error) {
+                    console.error('Remove item error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Network Error',
+                        text: 'Please check your connection and try again'
+                    });
+                } finally {
+                    // Reset button state
+                    this.disabled = false;
+                    this.innerHTML = 'Remove';
+                }
+            });
+        });
 
         document.getElementById('checkout-btn').addEventListener('click', async () => {
     try {

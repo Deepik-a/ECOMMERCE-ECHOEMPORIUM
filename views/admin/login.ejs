@@ -1,94 +1,202 @@
-<%- include('navbar') %>
-<style>
-    body {
-        background-color: rgb(214, 239, 216);
-        margin: 0;
-        font-family: 'Arial', sans-serif; /* Adjust font-family to match Echo Emporium */
-    }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Echo Emporium</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-    .main-container {
-        min-height: calc(100vh - 100px); /* Adjust based on header and footer height */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .bg-mesh {
+            background-color: #0b0f19;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.35) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(79, 70, 229, 0.25) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(14, 165, 233, 0.2) 0px, transparent 50%);
+        }
+        .glass-card {
+            background: rgba(17, 24, 39, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+        }
+        .glow-btn {
+            background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+            box-shadow: 0 4px 20px -2px rgba(37, 99, 235, 0.5);
+            transition: all 0.25s ease;
+        }
+        .glow-btn:hover {
+            box-shadow: 0 6px 24px -2px rgba(37, 99, 235, 0.7);
+            transform: translateY(-1px);
+        }
+        .glow-btn:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="bg-mesh min-h-screen flex items-center justify-center p-4 sm:p-6 md:p-10 text-gray-100 selection:bg-blue-500 selection:text-white">
 
-    .form-container {
-        background-color: white;
-        border: 1px solid #ddd; /* Light border around the container */
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        padding: 2rem;
-        width: 100%;
-        max-width: 500px; /* Adjust width as needed */
-        margin: 0 auto; /* Center horizontally */
-    }
+    <!-- Background Decorative Elements -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div class="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
+    </div>
 
-    .form-title {
-        text-align: center;
-        margin-bottom: 1.5rem;
-        color: rgb(80, 141, 78); /* Match the button color */
-    }
-
-    .form-control-lg {
-        height: calc(1.5em + .75rem + 2px);
-        padding: .75rem 1.25rem;
-        font-size: 1.25rem;
-        border-radius: .375rem;
-    }
-
-    .btn-custom {
-        background-color: rgb(80, 141, 78); /* Match the button color */
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 5px;
-        font-size: 1.25rem;
-        font-weight: bold;
-    }
-
-    .btn-custom:hover {
-        background-color: rgb(60, 120, 60); /* Slightly darker on hover */
-    }
-
-    .form-outline {
-        margin-bottom: 1.5rem;
-    }
-
-    .form-label {
-        font-weight: bold;
-        color: rgb(60, 60, 60); /* Match text color */
-    }
-</style>
-
-<section class="main-container">
-    <div class="form-container">
-        <h1 class="form-title">ADMIN LOGIN</h1>
-        <div class="row d-flex align-items-center justify-content-center">
-            <div class="col-md-12 mb-4">
-                <img src="../../public/assets/logo.png" class="img-fluid" alt="Logo">
+    <!-- Main Container -->
+    <div class="relative z-10 w-full max-w-md mx-auto">
+        <!-- Logo & Header Branding -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white shadow-lg shadow-blue-500/30 mb-4 border border-white/10">
+                <i class="fa fa-shield-alt text-2xl"></i>
             </div>
-            <form action="/admin/login" method="post">
-                <!-- Email input -->
-                <div class="form-outline">
-                    <input type="email" name="email" value="admin@gmail.com" id="form1Example13" class="form-control form-control-lg" />
-                    <label class="form-label" for="form1Example13">Email address</label>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Echo Emporium</h1>
+            <div class="flex items-center justify-center space-x-2 mt-2">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    <span class="w-1.5 h-1.5 rounded-full bg-blue-400 me-1.5 animate-ping"></span>
+                    Admin Control Center
+                </span>
+            </div>
+        </div>
+
+        <!-- Login Card -->
+        <div class="glass-card rounded-2xl p-6 sm:p-8 md:p-10">
+            <div class="mb-6 text-center sm:text-left">
+                <h2 class="text-xl font-bold text-white">Welcome Back</h2>
+                <p class="text-sm text-gray-400 mt-1">Please enter your admin credentials to access the console</p>
+            </div>
+
+            <!-- Error Banner -->
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="mb-6 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-start space-x-3 animate-shake">
+                    <i class="fa fa-exclamation-circle text-red-400 mt-0.5 flex-shrink-0"></i>
+                    <div class="flex-1 font-medium"><%= error %></div>
+                </div>
+            <% } %>
+
+            <!-- Login Form -->
+            <form action="/admin/login" method="POST" id="adminLoginForm" class="space-y-5">
+                <!-- Email Input -->
+                <div>
+                    <label for="adminEmail" class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">
+                        Admin Email
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                            <i class="fa fa-envelope text-sm"></i>
+                        </div>
+                        <input
+                            type="email"
+                            id="adminEmail"
+                            name="email"
+                            required
+                            placeholder="admin@example.com"
+                            value="admin@gmail.com"
+                            class="w-full pl-10 pr-4 py-3 bg-gray-900/60 border border-gray-700/80 rounded-xl text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                        />
+                    </div>
                 </div>
 
-                <!-- Password input -->
-                <div class="form-outline">
-                    <input type="password"  value = "admin@123" name="password"id="form1Example23" class="form-control form-control-lg" />
-                    <label class="form-label" for="form1Example23">Password</label>
+                <!-- Password Input -->
+                <div>
+                    <label for="adminPassword" class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">
+                        Password
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                            <i class="fa fa-lock text-sm"></i>
+                        </div>
+                        <input
+                            type="password"
+                            id="adminPassword"
+                            name="password"
+                            required
+                            placeholder="••••••••"
+                            value="admin@123"
+                            class="w-full pl-10 pr-11 py-3 bg-gray-900/60 border border-gray-700/80 rounded-xl text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                        />
+                        <button
+                            type="button"
+                            id="togglePasswordBtn"
+                            class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-200 transition focus:outline-none"
+                            title="Toggle password visibility">
+                            <i class="fa fa-eye text-sm" id="toggleIcon"></i>
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Submit button -->
-                <button type="submit" class="btn-custom btn-block">
-                    Login
-                </button>
+                <!-- Security & Session Info -->
+                <div class="flex items-center justify-between text-xs text-gray-400 pt-1">
+                    <label class="flex items-center space-x-2 cursor-pointer select-none">
+                        <input type="checkbox" checked disabled class="w-4 h-4 rounded text-blue-600 bg-gray-800 border-gray-700 focus:ring-0">
+                        <span class="text-gray-300">Keep me logged in</span>
+                    </label>
+                    <span class="flex items-center text-emerald-400 text-[11px] font-medium">
+                        <i class="fa fa-lock-open-alt text-xs me-1"></i> 256-Bit SSL
+                    </span>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="pt-2">
+                    <button
+                        type="submit"
+                        id="loginSubmitBtn"
+                        class="glow-btn w-full py-3.5 px-4 text-white font-semibold text-sm rounded-xl flex items-center justify-center space-x-2 transition">
+                        <span>Sign In to Dashboard</span>
+                        <i class="fa fa-arrow-right text-xs"></i>
+                    </button>
+                </div>
             </form>
         </div>
+
+        <!-- Footer Notice -->
+        <div class="text-center mt-8 text-xs text-gray-500">
+            <p>&copy; <%= new Date().getFullYear() %> Echo Emporium. Restricted Administrative Access.</p>
+        </div>
     </div>
-</section>
 
-<%- include('footer') %>
+    <!-- Interactive Script -->
+    <script>
+        // Password Visibility Toggle
+        const toggleBtn = document.getElementById('togglePasswordBtn');
+        const passwordInput = document.getElementById('adminPassword');
+        const toggleIcon = document.getElementById('toggleIcon');
 
+        if (toggleBtn && passwordInput && toggleIcon) {
+            toggleBtn.addEventListener('click', () => {
+                const isPassword = passwordInput.getAttribute('type') === 'password';
+                passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+                toggleIcon.classList.toggle('fa-eye', !isPassword);
+                toggleIcon.classList.toggle('fa-eye-slash', isPassword);
+            });
+        }
+
+        // Form Submit Loading State
+        const loginForm = document.getElementById('adminLoginForm');
+        const submitBtn = document.getElementById('loginSubmitBtn');
+
+        if (loginForm && submitBtn) {
+            loginForm.addEventListener('submit', () => {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = `
+                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Authenticating...</span>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>

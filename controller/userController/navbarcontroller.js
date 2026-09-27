@@ -7,26 +7,27 @@ const mongoose = require('mongoose')
 
 const home = async (req, res) => {
   try {
-  
-     // Check if the user session exists
-     if (req.session.user) {
-      // Fetch user details from the database using the session data
-      const user = await userSchema.findById(req.session.user);
+    let user = null;
+
+    if (req.session.user) {
+      // Fetch full user object from DB (session stores only _id)
+      user = await userSchema.findById(req.session.user);
 
       // Check if the user is blocked
       if (user && user.isBlocked) {
         console.log('User is blocked, redirecting to /account-blocked');
-        req.session.user = null; // Clear the session
+        req.session.user = null;
         req.flash('error', 'Your account has been blocked by the admin.');
-        return res.redirect('/account-blocked'); // Redirect to the blocked account page
+        return res.redirect('/account-blocked');
       }
     }
-    const products = await productSchema.find({  isActive: true })
-       
-    const categories=await categorySchema.find({isDeleted:false})
-    res.render('user/home', { categories, products, user: req.session.user})
+
+    const products = await productSchema.find({ isActive: true });
+    const categories = await categorySchema.find({ isDeleted: false });
+
+    res.render('user/home', { categories, products, user });
   } catch (error) {
-    console.log(`error while rendering home ${error}`)
+    console.log(`error while rendering home ${error}`);
   }
 }
 

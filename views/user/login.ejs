@@ -202,15 +202,25 @@
                 title: 'User not found!',
                 text: 'Please check your email and try again.',
             });
-        } 
-        // else if (errorType === 'invalidPassword') {
-        //     Swal.fire({
-        //         icon: 'error',
-        //         title: 'Incorrect password!',
-        //         text: 'Please try again.',
-        //     });
-        // } 
-        else if (errorType === 'serverError') {
+        } else if (errorType === 'invalidPassword') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Incorrect password!',
+                text: 'Please try again.',
+            });
+        } else if (errorType === 'useGoogle') {
+            Swal.fire({
+                icon: 'info',
+                title: 'Use Google Sign-In',
+                text: 'This account was created with Google. Please continue with Google.',
+            });
+        } else if (errorType === 'googleAuthFailed') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Google sign-in failed',
+                text: 'Please try again. If it keeps failing, use email login or check your Google Cloud OAuth credentials.',
+            });
+        } else if (errorType === 'serverError') {
             Swal.fire({
                 icon: 'error',
                 title: 'Server error!',
