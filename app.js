@@ -4,7 +4,7 @@ const path=require("path")
 const expressLayouts=require('express-ejs-layouts')
 const flash = require('connect-flash')
 const session=require('express-session')
-const MongoStore = require('connect-mongo');
+const { MongoStore } = require('connect-mongo');
 const passport = require('passport');
 require("./services/passport")
 
