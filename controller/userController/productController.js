@@ -150,7 +150,7 @@ const getAllProducts = async (req, res) => {
 
         const message = products.length === 0 ? 'No products found.' : '';
 
-        res.render('user/AllProduct', {
+        res.render('user/Allproduct', {
             products,
             categories,
             message,

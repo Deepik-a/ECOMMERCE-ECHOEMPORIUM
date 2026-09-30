@@ -4,6 +4,7 @@ const path=require("path")
 const expressLayouts=require('express-ejs-layouts')
 const flash = require('connect-flash')
 const session=require('express-session')
+const MongoStore = require('connect-mongo');
 const passport = require('passport');
 require("./services/passport")
 
@@ -53,6 +54,10 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'your-secret-key-echo-emporium-admin-persistent',
     resave: false,
     saveUninitialized: false,
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGODB_CONNECTION_STRING, // Or hardcode it if env var differs
+        collectionName: 'sessions'
+    }),
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
