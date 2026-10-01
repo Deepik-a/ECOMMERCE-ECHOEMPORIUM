@@ -196,12 +196,21 @@
         
                         <!-- Rating -->
                         <div class="rating-stars mb-3">
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
-                            <i class="fas fa-star-half-alt"></i>
-                            <span class="ms-2 text-muted">4.5 (128 reviews)</span>
+                            <% 
+                                const fullStars = Math.floor(averageRating);
+                                const hasHalfStar = averageRating % 1 >= 0.5;
+                                const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+                            %>
+                            <% for(let i = 0; i < fullStars; i++) { %>
+                                <i class="fa fa-star"></i>
+                            <% } %>
+                            <% if (hasHalfStar) { %>
+                                <i class="fas fa-star-half-alt"></i>
+                            <% } %>
+                            <% for(let i = 0; i < emptyStars; i++) { %>
+                                <i class="far fa-star"></i>
+                            <% } %>
+                            <span class="ms-2 text-muted"><%= averageRating > 0 ? averageRating : 'No' %> (<%= reviews ? reviews.length : 0 %> reviews)</span>
                         </div>
         
                         <!-- Stock and Description -->
@@ -223,6 +232,43 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Reviews Section -->
+        <div class="product-container mt-4 mb-5">
+            <h3 class="mb-4">Customer Reviews</h3>
+            <% if (reviews && reviews.length > 0) { %>
+                <div class="row">
+                    <% reviews.forEach(review => { %>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 shadow-sm border-0">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <h5 class="card-title mb-0"><%= review.userId ? review.userId.name : 'Unknown User' %></h5>
+                                        <div class="rating-stars">
+                                            <% for(let i = 0; i < review.rating; i++) { %>
+                                                <i class="fa fa-star text-warning"></i>
+                                            <% } %>
+                                            <% for(let i = 0; i < 5 - review.rating; i++) { %>
+                                                <i class="far fa-star text-warning"></i>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                    <h6 class="card-subtitle mb-2 text-muted" style="font-size: 0.85rem;">
+                                        <%= new Date(review.createdAt).toLocaleDateString() %>
+                                    </h6>
+                                    <p class="card-text mt-3"><%= review.reviewText %></p>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+            <% } else { %>
+                <div class="alert alert-light text-center" role="alert">
+                    <i class="fas fa-comment-slash fa-2x text-muted mb-3"></i>
+                    <p class="mb-0 text-muted">No reviews yet. Be the first to review this product after you buy it!</p>
+                </div>
+            <% } %>
         </div>
     
         <!-- Bootstrap 5 JS and Popper -->

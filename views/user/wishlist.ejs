@@ -175,6 +175,11 @@
 			}
 		</style>
 
+<!-- Added Unified Profile Sidebar Layout -->
+<div class="profile-container">
+    <%- include('profileSidebar') %>
+    
+    <div class="content-area">
 		<div class="wishlist-container">
 			<div class="wishlist-header">
 				<h1 class="wishlist-title">My Wishlist</h1>
@@ -190,7 +195,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					<% if (products && products.products.length > 0) { %>
+					<% if (products && products.products && products.products.length > 0) { %>
 				
 						<% products.products.forEach(function(item) { %>
 						<tr>
@@ -219,14 +224,19 @@
 						<% }); %>
 					<% } else { %>
 						<tr>
-							<td colspan="4" class="empty-wishlist">
-								Your wishlist is empty
+							<td colspan="4" class="empty-wishlist text-center">
+								<img src="https://cdn-icons-png.flaticon.com/512/10411/10411130.png" alt="Empty Wishlist" style="width: 150px; margin-bottom: 20px; opacity: 0.8;">
+								<h3 style="color: #666; font-weight: 500;">Your wishlist is empty</h3>
+								<p style="color: #999; margin-bottom: 20px;">Explore more and shortlist some items</p>
+								<a href="/" class="btn btn-add-to-cart" style="text-decoration: none;">Shop Now</a>
 							</td>
 						</tr>
 					<% } %>
 				</tbody>
 			</table>
 		</div>
+	</div>
+</div>
 	
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>

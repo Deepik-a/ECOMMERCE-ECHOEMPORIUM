@@ -403,46 +403,54 @@
                         </div>
             
                         <div class="modal-body">
-                            <form action="" method="POST" id="editAddressForm">
+                            <form action="" method="POST" id="editAddressForm" novalidate>
                                 <input type="hidden" name="index" id="editAddressIndex">
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="editBuilding" class="form-label">Building</label>
                                         <input type="text" name="building" id="editBuilding" class="form-control" required>
+                                        <div class="invalid-feedback">Building is required.</div>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="editStreet" class="form-label">Street</label>
                                         <input type="text" name="street" id="editStreet" class="form-control" required>
+                                        <div class="invalid-feedback">Street is required.</div>
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="editCity" class="form-label">City</label>
                                         <input type="text" name="city" id="editCity" class="form-control" required>
+                                        <div class="invalid-feedback">City is required.</div>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="editState" class="form-label">State</label>
                                         <input type="text" name="state" id="editState" class="form-control" required>
+                                        <div class="invalid-feedback">State is required.</div>
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="editCountry" class="form-label">Country</label>
                                         <input type="text" name="country" id="editCountry" class="form-control" required>
+                                        <div class="invalid-feedback">Country is required.</div>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="editPincode" class="form-label">Pincode</label>
-                                        <input type="text" name="pincode" id="editPincode" class="form-control" required>
+                                        <input type="text" name="pincode" id="editPincode" class="form-control" required pattern="\d{6}">
+                                        <div class="invalid-feedback">Pincode must be a 6-digit number.</div>
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="editPhone" class="form-label">Phone</label>
-                                        <input type="number" name="phone" id="editPhone" class="form-control">
+                                        <input type="text" name="phone" id="editPhone" class="form-control" required pattern="\d{10}">
+                                        <div class="invalid-feedback">Phone number must be a 10-digit number.</div>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="editLandmark" class="form-label">Landmark</label>
                                         <input type="text" name="landmark" id="editLandmark" class="form-control">
+                                        <div class="invalid-feedback">Landmark is required.</div>
                                     </div>
                                 </div>
                                 <div class="modal-footer">
@@ -460,30 +468,37 @@
             
             
             <script>
-                // Real-Time Validation for add-address
-                document.getElementById('addressForm').addEventListener('input', function (e) {
-                    const input = e.target;
-                    if (input.checkValidity()) {
-                        input.classList.remove('is-invalid');
-                        input.classList.add('is-valid');
-                    } else {
-                        input.classList.remove('is-valid');
-                        input.classList.add('is-invalid');
-                    }
-                });
-            
-                document.getElementById('addressForm').addEventListener('submit', function (e) {
-                    const form = e.target;
-                    if (!form.checkValidity()) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        form.querySelectorAll('input').forEach((input) => {
-                            if (!input.checkValidity()) {
-                                input.classList.add('is-invalid');
-                            }
-                        });
-                    }
-                });
+                // Real-Time Validation for add-address and edit-address
+                function handleRealTimeValidation(formId) {
+                    const form = document.getElementById(formId);
+                    if (!form) return;
+                    
+                    form.addEventListener('input', function (e) {
+                        const input = e.target;
+                        if (input.checkValidity()) {
+                            input.classList.remove('is-invalid');
+                            input.classList.add('is-valid');
+                        } else {
+                            input.classList.remove('is-valid');
+                            input.classList.add('is-invalid');
+                        }
+                    });
+                
+                    form.addEventListener('submit', function (e) {
+                        if (!form.checkValidity()) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            form.querySelectorAll('input').forEach((input) => {
+                                if (!input.checkValidity()) {
+                                    input.classList.add('is-invalid');
+                                }
+                            });
+                        }
+                    });
+                }
+
+                handleRealTimeValidation('addressForm');
+                handleRealTimeValidation('editAddressForm');
 
 
    // SweetAlert2 Confirmation for Delete Button

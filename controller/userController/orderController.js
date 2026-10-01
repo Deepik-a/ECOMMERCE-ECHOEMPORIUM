@@ -93,61 +93,71 @@ console.log('hai')
             return res.json({ success: false, message: 'Invalid order ID' });
         }
         const order = await Order.findById(orderId);
-        order.orderStatus='Cancelled'
             
         if (!order) {
             return res.json({ success: false, message: 'Order not found' });
         }
-       if(action == 'cancel'){
-        if(order.paid){
-            if (order.paymentMethod === 'razorpay' || order.paymentMethod === 'Wallet' ) {
-                const userWallet = await Wallet.findOne({ userID: order.userId });
-                if (userWallet) {
-                    userWallet.balance = (userWallet.balance || 0) + order.totalPrice;
-                    userWallet.transaction.push({
-                        wallet_amount: order.totalPrice,
-                        order_id: order.orderId,
-                        transactionType: 'Credited',
-                        transaction_date: new Date()
-                    });
-                    await userWallet.save();
-                } else {
-                    await Wallet.create({
-                        userID: order.userId,
-                        balance: order.totalPrice,
-                        transaction: [{
-                            wallet_amount: order.totalPrice,
-                            order_id: order.orderId,
-                            transactionType: 'Credited',
-                            transaction_date: new Date()
-                        }]
-                    });
-                }
-            }
-        }
-       }
- 
 
 
 const item = order.items.find(item => item.productId.toString() === productId);
 
 if(item){
-    item.productStatus = action === 'return'?'Requested':'Cancelled';
-    item.reasonForCancellation = action ==='cancel'?reason:null;
-    item.reasonForReturn = action === 'return'?reason:null;
+    item.status = action === 'return' ? 'Requested' : 'Cancelled';
+    item.reasonForCancellation = action === 'cancel' ? reason : null;
+    item.reasonForReturn = action === 'return' ? reason : null;
+
+    if (action === 'cancel' && (order.paid || order.paymentMethod === 'razorpay' || order.paymentMethod === 'Razorpay' || order.paymentMethod === 'Wallet')) {
+        const refundAmount = item.productPrice * item.productCount;
+        let userWallet = await Wallet.findOne({ userID: order.userId });
+        if (userWallet) {
+            userWallet.balance = (userWallet.balance || 0) + refundAmount;
+            userWallet.transaction.push({
+                wallet_amount: refundAmount,
+                order_id: order.orderId,
+                transactionType: 'Credited',
+                transaction_date: new Date()
+            });
+            await userWallet.save();
+        } else {
+            await Wallet.create({
+                userID: order.userId,
+                balance: refundAmount,
+                transaction: [{
+                    wallet_amount: refundAmount,
+                    order_id: order.orderId,
+                    transactionType: 'Credited',
+                    transaction_date: new Date()
+                }]
+            });
+        }
+    }
+} else {
+    return res.json({ success: false, message: 'Item not found in order. Please refresh the page and try again.' });
+}
+
+// Check if all items in the order are cancelled/returned to update the main order status
+const allStatuses = order.items.map(i => i.status);
+if (allStatuses.every(s => s === 'Cancelled')) {
+    order.status = 'Cancelled';
+} else if (allStatuses.every(s => s === 'Returned')) {
+    order.status = 'Returned';
+} else if (allStatuses.every(s => s === 'Cancelled' || s === 'Returned' || s === 'Rejected')) {
+    order.status = 'Cancelled';
+} else if (allStatuses.some(s => s === 'Requested')) {
+    order.status = 'Requested';
 }
 
 const product = await Product.findById(productId);
 
-console.log(`product = ${product}`)
 if(product){
-    product.stock += item.productCount;
-    await product.save();
+    // Only restock immediately if it's a cancellation. Returns should be restocked by admin upon approval.
+    if (action === 'cancel' && item) {
+        product.stock += item.productCount;
+        await product.save();
+    }
 }else{
     return res.json({ success: false, message: 'Product not found in inventory' });
 }
-
-console.log(`after = ${product.stock}`)
 
         
          console.log(`order = ${order}`)

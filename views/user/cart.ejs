@@ -1,207 +1,225 @@
-
 <%-include('navbar') %>
-<title>Your Cart</title>
+    <title>Your Cart</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    
-<style>
-    .cart-container {
-    animation: slideIn 0.5s ease-out;
-    border-radius: 12px;
-    padding: 25px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  margin-bottom: 50px;
-}
 
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+    <style>
+        .cart-container {
+            animation: slideIn 0.5s ease-out;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 50px;
+        }
 
-.cart-header {
-    color: rgb(26, 83, 25);
-    margin-bottom: 1.5rem;
-    animation: fadeIn 0.8s ease-out;
-}
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-.table-responsive {
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
+        .cart-header {
+            color: rgb(26, 83, 25);
+            margin-bottom: 1.5rem;
+            animation: fadeIn 0.8s ease-out;
+        }
 
-.cart-table {
-    margin-bottom: 0;
-    background-color: white;
-}
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
 
-.cart-table th {
-    background-color: rgb(26, 83, 25);
-    color: white;
-    border: none;
-    padding: 15px;
-}
+            to {
+                opacity: 1;
+            }
+        }
 
+        .table-responsive {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
 
+        .cart-table {
+            margin-bottom: 0;
+            background-color: white;
+        }
 
-.product-image {
-    transition: transform 0.3s ease;
-    max-width: 150px;
-    height: auto;
-}
-
-.quantity-control {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.quantity-btn {
-    background-color: rgb(26, 83, 25);
-    color: white;
-    border: none;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-}
+        .cart-table th {
+            background-color: rgb(26, 83, 25);
+            color: white;
+            border: none;
+            padding: 15px;
+        }
 
 
 
-.quantity-input {
-    width: 50px !important;
-    text-align: center;
-    border: 1px solid rgb(128, 175, 129);
-}
+        .product-image {
+            transition: transform 0.3s ease;
+            max-width: 150px;
+            height: auto;
+        }
 
-.remove-btn {
-    background-color: #800000;
-    border: none;
-    color: white;
-    transition: all 0.3s ease;
-}
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
 
-
-
-.cart-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 2rem;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.total-amount {
-    font-size: 1.25rem;
-    color: rgb(26, 83, 25);
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.02); }
-    100% { transform: scale(1); }
-}
-
-.checkout-btn {
-    background-color: rgb(26, 83, 25);
-    color: white;
-    border: none;
-    padding: 12px 30px;
-    border-radius: 6px;
-    transition: all 0.3s ease;
-    font-size: 1.1rem;
-}
+        .quantity-btn {
+            background-color: rgb(26, 83, 25);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
 
 
-.empty-cart {
-    text-align: center;
-   width:100%;
-   height:600px;
-    color: rgb(26, 83, 25);
-    font-size: 2.2rem;
-    font-weight: bold;
-    background-image: url('../../uploads/close-up-toy-cart-with-easter-eggs.jpg');
-    background-position: center;
-    background-size: cover;
-   
-    
-  
-}
 
-@media (max-width: 768px) {
-    .cart-container {
-        padding: 15px;
-    }
+        .quantity-input {
+            width: 50px !important;
+            text-align: center;
+            border: 1px solid rgb(128, 175, 129);
+        }
 
-    .cart-table thead {
-        display: none;
-    }
+        .remove-btn {
+            background-color: #800000;
+            border: none;
+            color: white;
+            transition: all 0.3s ease;
+        }
 
-    .cart-table, .cart-table tbody, .cart-table tr, .cart-table td {
-        display: block;
-        width: 100%;
-    }
 
-    .cart-table tr {
-        margin-bottom: 1rem;
-        border: 1px solid rgb(128, 175, 129);
-        border-radius: 8px;
-        padding: 10px;
-    }
 
-    .cart-table td {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px;
-        border: none;
-    }
+        .cart-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
 
-    .cart-table td::before {
-        content: attr(data-label);
-        font-weight: bold;
-        margin-right: 1rem;
-    }
+        .total-amount {
+            font-size: 1.25rem;
+            color: rgb(26, 83, 25);
+            animation: pulse 2s infinite;
+        }
 
-    .product-image {
-        max-width: 120px;
-    }
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
 
-    .cart-footer {
-        flex-direction: column;
-        text-align: center;
-    }
+            50% {
+                transform: scale(1.02);
+            }
 
-    .total-amount {
-        margin-bottom: 1rem;
-    }
+            100% {
+                transform: scale(1);
+            }
+        }
 
-    .quantity-btn, .remove-btn, .checkout-btn {
-        width: 100%;
-        margin: 5px 0;
-        padding: 10px;
-    }
-}
-</style>
+        .checkout-btn {
+            background-color: rgb(26, 83, 25);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+
+        .empty-cart {
+            text-align: center;
+            width: 100%;
+            height: 600px;
+            color: rgb(26, 83, 25);
+            font-size: 2.2rem;
+            font-weight: bold;
+            background-image: url('../../uploads/close-up-toy-cart-with-easter-eggs.jpg');
+            background-position: center;
+            background-size: cover;
+
+
+
+        }
+
+        @media (max-width: 768px) {
+            .cart-container {
+                padding: 15px;
+            }
+
+            .cart-table thead {
+                display: none;
+            }
+
+            .cart-table,
+            .cart-table tbody,
+            .cart-table tr,
+            .cart-table td {
+                display: block;
+                width: 100%;
+            }
+
+            .cart-table tr {
+                margin-bottom: 1rem;
+                border: 1px solid rgb(128, 175, 129);
+                border-radius: 8px;
+                padding: 10px;
+            }
+
+            .cart-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px;
+                border: none;
+            }
+
+            .cart-table td::before {
+                content: attr(data-label);
+                font-weight: bold;
+                margin-right: 1rem;
+            }
+
+            .product-image {
+                max-width: 120px;
+            }
+
+            .cart-footer {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .total-amount {
+                margin-bottom: 1rem;
+            }
+
+            .quantity-btn,
+            .remove-btn,
+            .checkout-btn {
+                width: 100%;
+                margin: 5px 0;
+                padding: 10px;
+            }
+        }
+    </style>
     <div class="container mt-5">
         <div class="cart-container">
             <h2 class="cart-header">Your Cart</h2>
 
-            <% if (typeof alertMessage !== 'undefined' && alertMessage !== '') { %>
+            <% if (typeof alertMessage !=='undefined' && alertMessage !=='' ) { %>
                 <script>
                     Swal.fire({
                         icon: 'error',
@@ -209,77 +227,93 @@
                         text: '<%= alertMessage %>',
                     });
                 </script>
-            <% } %>
+                <% } %>
 
-            <% if (cart.items && cart.items.length > 0) { %>
-                <div class="table-responsive">
-                    <table class="table cart-table">
-                        <thead>
-                            <tr>
-                                <th>Image</th>
-                                <th>Product</th>
-                                <th>Price</th>
-                                <th>Quantity</th>
-                                <th>Total</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% cart.items.forEach(item => { %>
-                                <%=cart%>
-                                <tr>
-                                    <td data-label="Image">
-                                        <img src=<%= '/uploads/' +   item.productId.imgArray[0]%> alt="Product Image" class="product-image" />
-                                        
-                                    </td>
-                                    <td data-label="Product"><%= item.productId.name %></td>
-                                    <td data-label="Price">Rs<%= item.productPrice.toFixed(2) %></td>
-                                    <td data-label="Quantity">
-                                        <form class="update-quantity-form" data-product-id="<%= item.productId._id %>">
-                                            <div class="quantity-control">
-                                                <button type="button" class="btn quantity-btn decrement-quantity" data-action="decrement">-</button>
-                                                <input type="text" name="productCount" value="<%= item.productCount %>" readonly class="form-control quantity-input" />
-                                                <button type="button" class="btn quantity-btn increment-quantity" data-action="increment">+</button>
-                                            </div>
-                                        </form>
-                                    </td>
-                                    <td data-label="Total">$<span class="item-total" data-price="<%= item.productPrice %>"><%= (item.productPrice * item.productCount).toFixed(2) %></span></td>
-                                    <td data-label="Action">
-                                        <button type="button" class="btn remove-btn remove-item-btn" data-product-id="<%= item.productId._id %>">Remove</button>
-                                    </td>
-                                </tr>
-                            <% }); %>
-                        </tbody>
-                    </table>
-                </div>
+                    <% if (cart.items && cart.items.length> 0) { %>
+                        <div class="table-responsive">
+                            <table class="table cart-table">
+                                <thead>
+                                    <tr>
+                                        <th>Image</th>
+                                        <th>Product</th>
+                                        <th>Price</th>
+                                        <th>Quantity</th>
+                                        <th>Total</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% cart.items.forEach(item=> { %>
 
-                <div class="cart-footer">
-                    <h4 id="cart-total" class="total-amount">Total Amount: $<%= cart.items.reduce((total, item) => total + (item.productPrice * item.productCount), 0).toFixed(2) %></h4>
-                    <button id="checkout-btn" class="btn checkout-btn">Buy Now</button>
-                </div>
-            <% } else { %>
-                <div class="empty-cart ">
-                    <p>Your cart is empty.</p>
-                </div>
-            <% } %>
+                                        <tr>
+                                            <td data-label="Image">
+                                                <img src=<%='/uploads/' + item.productId.imgArray[0]%> alt="Product
+                                                Image" class="product-image" />
+
+                                            </td>
+                                            <td data-label="Product">
+                                                <%= item.productId.name %>
+                                            </td>
+                                            <td data-label="Price">Rs<%= item.productPrice.toFixed(2) %>
+                                            </td>
+                                            <td data-label="Quantity">
+                                                <form class="update-quantity-form"
+                                                    data-product-id="<%= item.productId._id %>">
+                                                    <div class="quantity-control">
+                                                        <button type="button"
+                                                            class="btn quantity-btn decrement-quantity"
+                                                            data-action="decrement">-</button>
+                                                        <input type="text" name="productCount"
+                                                            value="<%= item.productCount %>" readonly
+                                                            class="form-control quantity-input" />
+                                                        <button type="button"
+                                                            class="btn quantity-btn increment-quantity"
+                                                            data-action="increment">+</button>
+                                                    </div>
+                                                </form>
+                                            </td>
+                                            <td data-label="Total">$<span class="item-total"
+                                                    data-price="<%= item.productPrice %>">
+                                                    <%= (item.productPrice * item.productCount).toFixed(2) %>
+                                                </span></td>
+                                            <td data-label="Action">
+                                                <button type="button" class="btn remove-btn remove-item-btn"
+                                                    data-product-id="<%= item.productId._id %>">Remove</button>
+                                            </td>
+                                        </tr>
+                                        <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="cart-footer">
+                            <h4 id="cart-total" class="total-amount">Total Amount: $<%= cart.items.reduce((total,
+                                    item)=> total + (item.productPrice * item.productCount), 0).toFixed(2) %></h4>
+                            <button id="checkout-btn" class="btn checkout-btn">Buy Now</button>
+                        </div>
+                        <% } else { %>
+                            <div class="empty-cart ">
+                                <p>Your cart is empty.</p>
+                            </div>
+                            <% } %>
         </div>
     </div>
 
 
 
 
-<!-- Script for Sweet alert CDN --> 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  
+    <!-- Script for Sweet alert CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 
 
-<!-- Script to handle limit and stock exceeded -->
+
+    <!-- Script to handle limit and stock exceeded -->
 
     <script>
 
         document.querySelectorAll('.increment-quantity, .decrement-quantity').forEach(button => {
-            button.addEventListener('click', function() {
+            button.addEventListener('click', function () {
                 const form = this.closest('.update-quantity-form');
                 const productId = form.dataset.productId;
                 const action = this.dataset.action;
@@ -307,66 +341,66 @@
                     },
                     body: JSON.stringify({ productId })
                 })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Response data:', data);
-                    if (data.success) {
-                        productCountElement.value = action === 'increment' ? productCount : productCount;
-                        const itemTotal = (data.updatedPrice).toFixed(2);
-                        form.closest('tr').querySelector('.item-total').textContent = itemTotal;
-                        document.getElementById('cart-total').textContent = `Total Amount: $${data.cartTotal.toFixed(2)}`;
-                        
-                        const decrementButton = form.querySelector('.decrement-quantity');
-                        if (data.disableButton) {
-                            decrementButton.setAttribute('disabled', true);
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Response data:', data);
+                        if (data.success) {
+                            productCountElement.value = action === 'increment' ? productCount : productCount;
+                            const itemTotal = (data.updatedPrice).toFixed(2);
+                            form.closest('tr').querySelector('.item-total').textContent = itemTotal;
+                            document.getElementById('cart-total').textContent = `Total Amount: $${data.cartTotal.toFixed(2)}`;
+
+                            const decrementButton = form.querySelector('.decrement-quantity');
+                            if (data.disableButton) {
+                                decrementButton.setAttribute('disabled', true);
+                            } else {
+                                decrementButton.removeAttribute('disabled');
+                            }
                         } else {
-                            decrementButton.removeAttribute('disabled');
+                            // Handle different error status codes
+                            let title = 'Error';
+                            let message = data.message || 'Could not update quantity';
+
+                            if (message.includes('Maximum quantity')) {
+                                title = 'Limit Exceeded';
+                            } else if (message.includes('Available quantity')) {
+                                title = 'Stock Exceeded';
+                            } else if (message.includes('not found')) {
+                                title = 'Not Found';
+                            }
+
+                            Swal.fire({
+                                icon: 'error',
+                                title: title,
+                                text: message
+                            });
                         }
-                    } else {
-                        // Handle different error status codes
-                        let title = 'Error';
-                        let message = data.message || 'Could not update quantity';
-                        
-                        if (message.includes('Maximum quantity')) {
-                            title = 'Limit Exceeded';
-                        } else if (message.includes('Available quantity')) {
-                            title = 'Stock Exceeded';
-                        } else if (message.includes('not found')) {
-                            title = 'Not Found';
-                        }
-                        
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
                         Swal.fire({
                             icon: 'error',
-                            title: title,
-                            text: message
+                            title: 'Network Error',
+                            text: 'Please check your connection and try again'
                         });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Network Error',
-                        text: 'Please check your connection and try again'
+                    })
+                    .finally(() => {
+                        // Reset loading state
+                        form.classList.remove('loading');
+                        buttons.forEach(btn => btn.disabled = false);
                     });
-                })
-                .finally(() => {
-                    // Reset loading state
-                    form.classList.remove('loading');
-                    buttons.forEach(btn => btn.disabled = false);
-                });
             });
         });
 
         // Remove item from cart with error handling
         document.querySelectorAll('.remove-item-btn').forEach(button => {
-            button.addEventListener('click', async function() {
+            button.addEventListener('click', async function () {
                 const productId = this.dataset.productId;
                 const row = this.closest('tr');
-                
+
                 // Prevent duplicate requests
                 if (this.disabled) return;
-                
+
                 // Confirm removal
                 const result = await Swal.fire({
                     title: 'Remove Item',
@@ -377,13 +411,13 @@
                     cancelButtonColor: '#3085d6',
                     confirmButtonText: 'Yes, remove it!'
                 });
-                
+
                 if (!result.isConfirmed) return;
-                
+
                 // Set loading state
                 this.disabled = true;
                 this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-                
+
                 try {
                     const response = await fetch(`/cart/remove/${productId}`, {
                         method: 'GET',
@@ -391,23 +425,23 @@
                             'Content-Type': 'application/json',
                         }
                     });
-                    
+
                     const data = await response.json();
-                    
+
                     if (response.ok && data.success) {
                         // Remove the row from the table
                         row.remove();
-                        
+
                         // Update cart total
                         const cartTotal = data.cart.totalPrice.toFixed(2);
                         document.getElementById('cart-total').textContent = `Total Amount: $${cartTotal}`;
-                        
+
                         // Check if cart is empty
                         const remainingItems = document.querySelectorAll('tbody tr').length;
                         if (remainingItems === 0) {
                             location.reload();
                         }
-                        
+
                         Swal.fire({
                             icon: 'success',
                             title: 'Removed!',
@@ -418,7 +452,7 @@
                     } else {
                         let title = 'Error';
                         let message = data.message || 'Could not remove item';
-                        
+
                         switch (response.status) {
                             case 400:
                                 title = 'Invalid Request';
@@ -436,7 +470,7 @@
                                 message = 'Please try again later';
                                 break;
                         }
-                        
+
                         Swal.fire({
                             icon: 'error',
                             title: title,
@@ -459,40 +493,40 @@
         });
 
         document.getElementById('checkout-btn').addEventListener('click', async () => {
-    try {
-        const response = await fetch('/checkout/validate', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            try {
+                const response = await fetch('/checkout/validate', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Redirect to checkout if validation succeeds
+                    window.location.href = '/checkout';
+                } else {
+                    // Show error message using Swal
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Checkout Error',
+                        text: data.message, // Show the error message from the backend
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+
+                // Handle unexpected errors
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Unexpected Error',
+                    text: 'An unexpected error occurred. Please try again later.',
+                });
+            }
         });
-
-        const data = await response.json();
-
-        if (data.success) {
-            // Redirect to checkout if validation succeeds
-            window.location.href = '/checkout';
-        } else {
-            // Show error message using Swal
-            Swal.fire({
-                icon: 'error',
-                title: 'Checkout Error',
-                text: data.message, // Show the error message from the backend
-            });
-        }
-    } catch (error) {
-        console.error('Error:', error);
-
-        // Handle unexpected errors
-        Swal.fire({
-            icon: 'error',
-            title: 'Unexpected Error',
-            text: 'An unexpected error occurred. Please try again later.',
-        });
-    }
-});
 
     </script>
 
 
-<%- include('footer') %>
+    <%- include('footer') %>

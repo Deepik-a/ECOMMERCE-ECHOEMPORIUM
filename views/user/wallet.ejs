@@ -119,60 +119,67 @@
 
 <%- include('navbar') %>
 
-<div class="container" style="margin-top: 40px;">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <div class="wallet-box">
-                <i class="bi bi-wallet-fill history-icon"></i>
-                <h1 style="color:rgb(26, 83, 25);">Your Wallet</h1>
-                <p>Available Balance
-                <h3 class="text-danger">₹ <%= (wallet.balance).toFixed(2) %></h3>
-                </p>
-            </div>
-        </div>
-    </div>
-
-    <div class="row justify-content-center" >
-        <div class="col-lg-10">
-            <div class="transaction-history">
-                <h1 style="color:rgb(26, 83, 25);">Transaction History</h1>
-                <% if(wallet.transaction.length > 0) { %>
-                    <div class="transaction-head">
-                        <div class="flex-row text-center">
-                            <h6>Date</h6>
-                        </div>
-                        <div class="flex-row text-center">
-                            <h6>Type</h6>
-                        </div>
-                        <div class="flex-row text-center">
-                            <h6>Order Id</h6>
-                        </div>
-                        <div class="flex-row text-center">
-                            <h6>Amount</h6>
-                        </div>
+<!-- Added Unified Profile Sidebar Layout -->
+<div class="profile-container">
+    <%- include('profileSidebar') %>
+    
+    <div class="content-area">
+        <div class="container" style="margin-top: 40px;">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="wallet-box">
+                        <i class="bi bi-wallet-fill history-icon"></i>
+                        <h1 style="color:rgb(26, 83, 25);">Your Wallet</h1>
+                        <p>Available Balance
+                        <h3 class="text-danger">₹ <%= (wallet.balance).toFixed(2) %></h3>
+                        </p>
                     </div>
-                    <% wallet.transaction.forEach(element => { %>
-                        <div class="transaction-row">
-                            <div class="flex-row text-center">
-                                <p><%= element.transaction_date.toDateString() %></p>
+                </div>
+            </div>
+
+            <div class="row justify-content-center" >
+                <div class="col-lg-10">
+                    <div class="transaction-history">
+                        <h1 style="color:rgb(26, 83, 25);">Transaction History</h1>
+                        <% if(wallet.transaction.length > 0) { %>
+                            <div class="transaction-head">
+                                <div class="flex-row text-center">
+                                    <h6>Date</h6>
+                                </div>
+                                <div class="flex-row text-center">
+                                    <h6>Type</h6>
+                                </div>
+                                <div class="flex-row text-center">
+                                    <h6>Order Id</h6>
+                                </div>
+                                <div class="flex-row text-center">
+                                    <h6>Amount</h6>
+                                </div>
                             </div>
-                            <div class="flex-row text-center">
-                                <p><%= element.transactionType %></p>
-                            </div>
-                            <div class="flex-row text-center">
-                                <h6>#<%= element.order_id %></h6>
-                            </div>
-                            <div class="flex-row text-center">
-                                <h5>₹ <%= element.wallet_amount %></h5>
-                            </div>
-                        </div>
-                    <% }); %>
-                <% } else { %>
-                    <h3 style="color:rgb(26, 83, 25);" class="no-history">No Transactions Yet</h3>
-                <% } %>
+                            <% wallet.transaction.forEach(element => { %>
+                                <div class="transaction-row">
+                                    <div class="flex-row text-center">
+                                        <p><%= element.transaction_date.toDateString() %></p>
+                                    </div>
+                                    <div class="flex-row text-center">
+                                        <p><%= element.transactionType %></p>
+                                    </div>
+                                    <div class="flex-row text-center">
+                                        <h6>#<%= element.order_id %></h6>
+                                    </div>
+                                    <div class="flex-row text-center">
+                                        <h5>₹ <%= element.wallet_amount %></h5>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <h3 style="color:rgb(26, 83, 25);" class="no-history">No Transactions Yet</h3>
+                        <% } %>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-    <%- include('footer') %>
+<%- include('footer') %>

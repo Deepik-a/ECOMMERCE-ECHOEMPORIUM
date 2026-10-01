@@ -21,10 +21,10 @@ const wishlistpage = async (req, res) => {
         const wishlist = await wishlistSchema.findOne({ user: userId }).populate('products.productID');
         console.log("wishlist1", wishlist);
 
-        if (wishlist) {
+        if (wishlist && wishlist.products.length > 0) {
             res.render('user/wishlist', { title: "Wishlist", products: wishlist, user: req.session.user });
         } else {
-            res.render('user/wishlist', { title: "Wishlist", products: [], user: req.session.user });
+            res.render('user/wishlist', { title: "Wishlist", products: null, user: req.session.user });
         }
     } catch (error) {
         console.log(`Error while rendering wishlist page ${error}`);

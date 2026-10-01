@@ -1,61 +1,15 @@
-const nodemailer = require('nodemailer');
+const axios = require('axios');
 require('dotenv').config();
 
-const mailUser = process.env.MAIL
-  ? process.env.MAIL.trim().replace(/^["']|["']$/g, '')
-  : '';
-const mailPass = process.env.PASS
-  ? process.env.PASS.trim().replace(/\s+/g, '').replace(/^["']|["']$/g, '')
-  : '';
-const smtpHost = process.env.SMTP_HOST
-  ? process.env.SMTP_HOST.trim().replace(/^["']|["']$/g, '')
-  : 'smtp.gmail.com';
-const smtpPort = process.env.SMTP_PORT
-  ? parseInt(process.env.SMTP_PORT.toString().trim(), 10)
-  : 587;
+const brevoApiKey = process.env.BREVO_API_KEY ? process.env.BREVO_API_KEY.trim().replace(/^["']|["']$/g, '') : '';
+const senderEmail = process.env.MAIL ? process.env.MAIL.trim().replace(/^["']|["']$/g, '') : 'noreply@echoemporium.com';
 
-let transporter = null;
-
-function getTransporter() {
-  if (!transporter) {
-    // Prefer Gmail service when host is Gmail — more reliable than raw SMTP on some networks
-    const isGmail = /gmail\.com$/i.test(smtpHost);
-    transporter = nodemailer.createTransport(
-      isGmail
-        ? {
-            service: 'gmail',
-            auth: {
-              user: mailUser,
-              pass: mailPass,
-            },
-            connectionTimeout: 20000,
-            greetingTimeout: 20000,
-            socketTimeout: 30000,
-          }
-        : {
-            host: smtpHost,
-            port: smtpPort,
-            secure: smtpPort === 465,
-            requireTLS: smtpPort === 587,
-            auth: {
-              user: mailUser,
-              pass: mailPass,
-            },
-            connectionTimeout: 20000,
-            greetingTimeout: 20000,
-            socketTimeout: 30000,
-          }
-    );
-  }
-  return transporter;
-}
-
-function sendOTP(email, otp) {
+async function sendOTP(email, otp) {
   console.log(`Sending OTP to: ${email}`);
   console.log(`[DEV] OTP for ${email}: ${otp}`);
 
-  if (!mailUser || !mailPass) {
-    return Promise.reject(new Error('MAIL or PASS is not configured in .env'));
+  if (!brevoApiKey) {
+    return Promise.reject(new Error('BREVO_API_KEY is not configured in .env'));
   }
 
   const otpDigits = String(otp)
@@ -66,11 +20,7 @@ function sendOTP(email, otp) {
     )
     .join('<td style="width:8px;"></td>');
 
-  const mailOptions = {
-    from: `"Echo Emporium" <${mailUser}>`,
-    to: email,
-    subject: 'Your Echo Emporium verification code',
-    html: `
+  const htmlContent = `
       <div style="margin:0;padding:0;background:#eef3ee;font-family:Georgia,'Times New Roman',serif;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef3ee;padding:32px 16px;">
           <tr>
@@ -114,19 +64,34 @@ function sendOTP(email, otp) {
           </tr>
         </table>
       </div>
-    `,
-    text: `Echo Emporium\n\nYour verification code is ${otp}.\nIt expires in 2 minutes.\n\nNever share this code with anyone.`,
-  };
+    `;
 
-  return getTransporter().sendMail(mailOptions)
-    .then((info) => {
-      console.log('OTP email sent successfully:', info.response);
-      return info;
-    })
-    .catch((err) => {
-      console.error('Error sending OTP email:', err.message);
-      throw err;
-    });
+  const textContent = `Echo Emporium\n\nYour verification code is ${otp}.\nIt expires in 2 minutes.\n\nNever share this code with anyone.`;
+
+  try {
+    const response = await axios.post(
+      'https://api.brevo.com/v3/smtp/email',
+      {
+        sender: { name: 'Echo Emporium', email: senderEmail },
+        to: [{ email: email }],
+        subject: 'Your Echo Emporium verification code',
+        htmlContent: htmlContent,
+        textContent: textContent,
+      },
+      {
+        headers: {
+          'accept': 'application/json',
+          'api-key': brevoApiKey,
+          'content-type': 'application/json',
+        },
+      }
+    );
+    console.log('OTP email sent successfully via Brevo API:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error sending OTP email via Brevo API:', error.response?.data || error.message);
+    throw error;
+  }
 }
 
 module.exports = sendOTP;

@@ -2,6 +2,7 @@ const userSchema=require('../../model/userSchema')
 const productSchema=require('../../model/productSchema')
 const categorySchema=require('../../model/categorySchema')
 const Offer=require('../../model/offerSchema')
+const Review = require('../../model/reviewSchema')
 
 
 
@@ -82,8 +83,17 @@ const getProductDetail = async (req, res) => {
         // Get the category name from the populated category object
         const categoryName = product.category.name;
 
+        // Fetch reviews
+        const reviews = await Review.find({ productId: product._id }).populate('userId', 'name');
+        
+        let averageRating = 0;
+        if (reviews.length > 0) {
+            const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
+            averageRating = (sum / reviews.length).toFixed(1);
+        }
+
         // Render the product detail page and pass product data + categoryName + the applicable offer
-        res.render('user/productsDetail', { product, categoryName, applicableOffers, appliedOffer });
+        res.render('user/productsDetail', { product, categoryName, applicableOffers, appliedOffer, reviews, averageRating });
     } catch (error) {
         console.error('Error fetching product:', error);
         res.status(500).send('Server Error');
@@ -206,11 +216,42 @@ const searchbyProducts = async (req, res) => {
 
 
 
+const addReview = async (req, res) => {
+    try {
+        const { productId, rating, reviewText } = req.body;
+        const userId = req.session.user;
+        
+        if (!userId) {
+            return res.status(401).json({ success: false, message: 'Please login to submit a review' });
+        }
+
+        // Check if user already reviewed this product
+        const existingReview = await Review.findOne({ userId, productId });
+        if (existingReview) {
+            return res.json({ success: false, message: 'You have already reviewed this product' });
+        }
+
+        const review = new Review({
+            userId,
+            productId,
+            rating,
+            reviewText
+        });
+
+        await review.save();
+        res.json({ success: true, message: 'Review submitted successfully!' });
+    } catch (error) {
+        console.error('Error adding review:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+
 module.exports = {
     getProductsByCategory,
     getProductDetail,
     imageZoom,
     getAllProducts,
     sortAllproducts,
-    searchbyProducts
+    searchbyProducts,
+    addReview
 };

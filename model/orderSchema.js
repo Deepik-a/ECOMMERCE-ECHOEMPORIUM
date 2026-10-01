@@ -27,10 +27,9 @@ const orderSchema = new mongoose.Schema({
         productImage: {
             type: String,
         },     
-        // Add individual status for each product
         status: {
             type: String,
-            enum: ['Pending', 'Shipped', 'Delivered', 'Cancelled', 'Returned','Paid','Requested'],
+            enum: ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled', 'Returned','Paid','Requested', 'Rejected'],
             default: 'Pending' // Default status for individual product
         },
         reasonForCancellation:{
@@ -82,7 +81,7 @@ const orderSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'Shipped', 'Paid', 'Delivered', 'Cancelled', 'Returned'],
+        enum: ['Pending', 'Confirmed', 'Shipped', 'Paid', 'Delivered', 'Cancelled', 'Returned', 'Requested', 'Rejected'],
         default: 'Pending' // Default status when the order is placed
     },
 }, {

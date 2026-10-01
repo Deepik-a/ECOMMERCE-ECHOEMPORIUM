@@ -65,12 +65,14 @@ const changeProductStatus = async (req, res) => {
     try {
         // Define status transitions
         const statusTransitions = {
-            'Pending': ['Shipped', 'Confirmed'],
+            'Pending': ['Shipped', 'Confirmed', 'Cancelled'],
             'Confirmed': ['Delivered', 'Cancelled'],
             'Shipped': ['Delivered', 'Returned'],
             'Delivered': [],
             'Cancelled': [],
-            'Returned': []
+            'Returned': [],
+            'Requested': ['Returned', 'Rejected'],
+            'Rejected': []
         };
 
         // Find the order and populate product details to ensure full data
@@ -104,15 +106,64 @@ const changeProductStatus = async (req, res) => {
         // Update the individual product status
         currentItem.status = status;
 
+        // --- AUTOMATED REFUND AND RESTOCK FEATURE ---
+        if (status === 'Returned') {
+            // 1. Restock the item
+            const product = await Product.findById(productId);
+            if (product) {
+                product.stock += currentItem.productCount;
+                await product.save();
+            }
+
+            // 2. Refund to wallet (if they paid upfront via Razorpay or Wallet)
+            if (order.paymentMethod === 'Razorpay' || order.paymentMethod === 'Wallet' || order.paymentMethod === 'razorpay') {
+                const Wallet = require('../../model/walletSchema'); // Import Wallet model
+                const refundAmount = currentItem.productPrice * currentItem.productCount;
+                
+                let userWallet = await Wallet.findOne({ userID: order.userId });
+                if (userWallet) {
+                    userWallet.balance = (userWallet.balance || 0) + refundAmount;
+                    userWallet.transaction.push({
+                        wallet_amount: refundAmount,
+                        order_id: order.orderId,
+                        transactionType: 'Credited',
+                        transaction_date: new Date()
+                    });
+                    await userWallet.save();
+                } else {
+                    await Wallet.create({
+                        userID: order.userId,
+                        balance: refundAmount,
+                        transaction: [{
+                            wallet_amount: refundAmount,
+                            order_id: order.orderId,
+                            transactionType: 'Credited',
+                            transaction_date: new Date()
+                        }]
+                    });
+                }
+            }
+        }
+        // --------------------------------------------
+
         // Optional: Update overall order status based on individual product statuses
         const allStatuses = order.items.map(item => item.status);
-        const isAllDelivered = allStatuses.every(s => s === 'Delivered');
-        const isAllCancelled = allStatuses.every(s => s === 'Cancelled');
-
-        if (isAllDelivered) {
+        
+        if (allStatuses.every(s => s === 'Delivered')) {
             order.status = 'Delivered';
-        } else if (isAllCancelled) {
-            order.status = 'Cancelled';
+        } else if (allStatuses.every(s => s === 'Cancelled' || s === 'Returned' || s === 'Rejected')) {
+            // If all items are some form of cancelled/returned
+            if (allStatuses.every(s => s === 'Cancelled')) order.status = 'Cancelled';
+            else if (allStatuses.every(s => s === 'Returned')) order.status = 'Returned';
+            else order.status = 'Cancelled'; // Mixed terminal states
+        } else if (allStatuses.some(s => s === 'Shipped' || s === 'Delivered')) {
+            order.status = 'Shipped';
+        } else if (allStatuses.some(s => s === 'Confirmed')) {
+            order.status = 'Confirmed';
+        } else if (allStatuses.some(s => s === 'Requested')) {
+            order.status = 'Requested'; // Or leave as is, but it's good to indicate return request
+        } else {
+            order.status = 'Pending';
         }
 
         // Save the updated order

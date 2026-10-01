@@ -56,33 +56,24 @@
 <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
 
-        <!-- Filter Button (must be inside div.dropdown for Bootstrap 5) -->
-        <div class="dropdown">
-            <button class="btn dropdown-toggle" id="filterButton" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                Filter
-            </button>
-            <!-- Dropdown Menu for Categories -->
-            <ul id="categoryList" class="dropdown-menu" aria-labelledby="filterButton">
-                <li><a class="dropdown-item <%= currentCategory === '' ? 'fw-bold' : '' %>" href="/all-products?sort=<%= currentSort %>">All Categories</a></li>
-                <% categories.forEach(category => { %>
-                    <li><a class="dropdown-item <%= currentCategory === category.name ? 'fw-bold' : '' %>" href="/all-products?category=<%= encodeURIComponent(category.name) %>&sort=<%= currentSort %>"><%= category.name %></a></li>
-                <% }) %>
-            </ul>
-        </div>
-
-        <!-- Sort Dropdown -->
-        <div class="dropdown">
-            <button style="background-color: rgb(26, 83, 25); color: rgb(214, 239, 216);" class="btn dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                Sort By
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="sortDropdown">
-                <li><a class="dropdown-item <%= currentSort === 'new_arrivals' ? 'fw-bold' : '' %>" href="/all-products?sort=new_arrivals&category=<%= encodeURIComponent(currentCategory) %>">New Arrivals</a></li>
-                <li><a class="dropdown-item <%= currentSort === 'price_low_high' ? 'fw-bold' : '' %>" href="/all-products?sort=price_low_high&category=<%= encodeURIComponent(currentCategory) %>">Price: Low to High</a></li>
-                <li><a class="dropdown-item <%= currentSort === 'price_high_low' ? 'fw-bold' : '' %>" href="/all-products?sort=price_high_low&category=<%= encodeURIComponent(currentCategory) %>">Price: High to Low</a></li>
-                <li><a class="dropdown-item <%= currentSort === 'az' ? 'fw-bold' : '' %>" href="/all-products?sort=az&category=<%= encodeURIComponent(currentCategory) %>">A - Z</a></li>
-                <li><a class="dropdown-item <%= currentSort === 'za' ? 'fw-bold' : '' %>" href="/all-products?sort=za&category=<%= encodeURIComponent(currentCategory) %>">Z - A</a></li>
-            </ul>
-        </div>
+        <form id="filterSortForm" action="/all-products" method="GET" class="d-flex gap-3 w-100 justify-content-between">
+            <div class="d-flex gap-3">
+                <select name="category" class="form-select w-auto" onchange="document.getElementById('filterSortForm').submit();" style="background-color: rgb(26, 83, 25); color: rgb(214, 239, 216); border: none; font-weight: 500;">
+                    <option value="">All Categories</option>
+                    <% categories.forEach(category => { %>
+                        <option value="<%= category.name %>" <%= currentCategory === category.name ? 'selected' : '' %>><%= category.name %></option>
+                    <% }) %>
+                </select>
+                
+                <select name="sort" class="form-select w-auto" onchange="document.getElementById('filterSortForm').submit();" style="background-color: rgb(26, 83, 25); color: rgb(214, 239, 216); border: none; font-weight: 500;">
+                    <option value="new_arrivals" <%= currentSort === 'new_arrivals' ? 'selected' : '' %>>New Arrivals</option>
+                    <option value="price_low_high" <%= currentSort === 'price_low_high' ? 'selected' : '' %>>Price: Low to High</option>
+                    <option value="price_high_low" <%= currentSort === 'price_high_low' ? 'selected' : '' %>>Price: High to Low</option>
+                    <option value="az" <%= currentSort === 'az' ? 'selected' : '' %>>A - Z</option>
+                    <option value="za" <%= currentSort === 'za' ? 'selected' : '' %>>Z - A</option>
+                </select>
+            </div>
+        </form>
 
        
     </div>
@@ -166,8 +157,6 @@
 
 </div>
 <% } %>
-<!-- jQuery is not required for Bootstrap 5 -->
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>

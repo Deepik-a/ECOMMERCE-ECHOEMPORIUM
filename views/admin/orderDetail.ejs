@@ -149,6 +149,7 @@ button:hover {
                     <th>Quantity</th>
                     <th>Price</th>
                     <th>Payment Method</th>
+                    <th>Reason</th>
                     <th>Status</th>
                     <th>Action</th>
                 </tr>
@@ -156,10 +157,22 @@ button:hover {
             <tbody>
                 <% order.items.forEach(item => { %>
                     <tr>
-                        <td> <img src="<%=item.productImage%>"  class="order-image" style="width: 100px;"></td>
+                        <td> <img src="/uploads/<%=item.productImage%>"  class="order-image" style="width: 100px;"></td>
+                        <td><%= item.productId ? item.productId.name : 'Unknown Product' %></td>
                         <td><%= item.productCount %></td>
                         <td>$<%= item.productPrice %></td>
                         <td><%= order.paymentMethod %></td>
+                        <td>
+                            <% if (item.status === 'Cancelled' && item.reasonForCancellation) { %>
+                                <span class="text-danger">Cancel Reason: <%= item.reasonForCancellation %></span>
+                            <% } else if (item.status === 'Returned' && item.reasonForReturn) { %>
+                                <span class="text-warning">Return Reason: <%= item.reasonForReturn %></span>
+                            <% } else if (item.status === 'Requested' && item.reasonForReturn) { %>
+                                <span class="text-warning">Return Reason: <%= item.reasonForReturn %></span>
+                            <% } else { %>
+                                -
+                            <% } %>
+                        </td>
                         <td>
                             <div class="dropdown">
                                 <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -167,12 +180,14 @@ button:hover {
                                 </button>
                                 <ul class="dropdown-menu">
                                     <% const statusTransitions = {
-                                        'Pending': ['Shipped', 'Confirmed'],
+                                        'Pending': ['Shipped', 'Confirmed', 'Cancelled'],
                                         'Confirmed': ['Delivered', 'Cancelled'],
                                         'Shipped': ['Delivered', 'Returned'],
                                         'Delivered': [], // No transitions possible
                                         'Cancelled': [], // No transitions possible
-                                        'Returned': []   // No transitions possible
+                                        'Returned': [],   // No transitions possible
+                                        'Requested': ['Returned', 'Rejected'],
+                                        'Rejected': []
                                     }; 
                                     
                                     const validStatuses = statusTransitions[item.status] || []; %>
@@ -180,8 +195,8 @@ button:hover {
                                     <% validStatuses.forEach(validStatus => { %>
                                         <li>
                                             <form action="/admin/orders/item-status" method="POST" class="d-inline">
-                                               
-                                              
+                                                <input type="hidden" name="orderId" value="<%= order._id %>">
+                                                <input type="hidden" name="productId" value="<%= item.productId._id %>">
                                                 <input type="hidden" name="status" value="<%= validStatus %>">
                                                 <button type="submit" class="dropdown-item">
                                                     <%= validStatus %>

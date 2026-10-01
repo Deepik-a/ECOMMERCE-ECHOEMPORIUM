@@ -131,6 +131,7 @@ route.get('/products',checkUser,productController.sortAllproducts)
 route.get('/product/zoom/:id',productController.imageZoom)
 route.get('/categories/:categoryName',checkUser , productController.getProductsByCategory);
 route.post('/search',checkUser,productController.searchbyProducts)
+route.post('/product/review',checkUser,productController.addReview)
 
 
  //--------------------------------UserProfile----------------------------
